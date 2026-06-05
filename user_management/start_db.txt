@@ -1,0 +1,6 @@
+docker run --name my-postgres-container \
+  -e POSTGRES_USER=root \
+  -e POSTGRES_PASSWORD=root \
+  -e POSTGRES_DB=my_new_database \
+  -p 5432:5432 \
+  -d postgres:14.23-trixie
