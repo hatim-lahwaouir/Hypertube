@@ -28,6 +28,7 @@ func StartDb() *gorm.DB {
 
     // migration
     db.AutoMigrate(&UserEmail{})
+    db.AutoMigrate(&User{})
 
     if err != nil {
         log.Fatal("failed to connect database", err)

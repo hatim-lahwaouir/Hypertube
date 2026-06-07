@@ -3,9 +3,12 @@ package api
 
 import (
     "net/http"
+    "github.com/hatim-lahwaouir/Hypertube/user_management/middleware"
     "github.com/hatim-lahwaouir/Hypertube/user_management/handler"
+    "github.com/hatim-lahwaouir/Hypertube/user_management/services"
     "github.com/hatim-lahwaouir/Hypertube/user_management/utils"
     "github.com/hatim-lahwaouir/Hypertube/user_management/models"
+    "fmt"
     "github.com/joho/godotenv"
     "log"
 )
@@ -31,16 +34,30 @@ func StartServer(server http.Server) error {
 		log.Fatal("Error loading .env file")
 	}
     // start db
+    fmt.Println("start db")
     db := models.StartDb() 
+    // setup services 
+    authService := services.NewAuthService()
+    // setup respositories 
+    userRepository := models.NewUserRepository(db)
+
+
     // Setup Handlers 
-    newUser:= handler.NewUserHandler(db)
+
+    newUser:= handler.NewUserHandler(userRepository, authService)
     router := http.NewServeMux()
+    authRouter  :=  http.NewServeMux()
 
 
-    router.HandleFunc("POST /SignUp", utils.MakeHandler(newUser.RegisterUser))
-    router.HandleFunc("POST /ValidateEmail", utils.MakeHandler(newUser.ValidateEmail))
+    router.HandleFunc("POST /signUp", utils.MakeHandler(newUser.RegisterUser))
+    router.HandleFunc("POST /validateEmail", utils.MakeHandler(newUser.ValidateEmail))
+    router.HandleFunc("POST /login", utils.MakeHandler(newUser.Login))
 
 
+    // routes that need authentication 
+    authRouter.HandleFunc("GET /me", utils.MakeHandler(newUser.GetCurrentUserInfo))
+
+    router.Handle("/", middleware.Auth(authRouter))
     server.Handler = router
 
 

@@ -21,8 +21,26 @@ type UserSignUp struct{
     Code     string  `json:"code" validate:"required"`
 }
 
+type CurrentUserInfo struct{
+    ID  uint64
+    Username string `json:"username" validate:"required,min=3,max=50,alphanum"` 
+    Email string   `json:"email" validate:"required,email"`
+    FirstName string `json:"firstname" validate:"required,min=3,max=50,alpha"`
+    LastName string `json:"lastname" validate:"required,min=3,max=50,alpha"`
+}
+
+
+type  AuthUser struct {
+    ID  uint64
+}
+
 type UserEmail struct{
     Email string   `json:"email" validate:"required,email"`
+}
+
+type UserLogin struct{
+    Email    string   `json:"email" validate:"required,email"`
+    Password string   `json:"password" validate:"required"`
 }
 
 var Errors map[string]string  = map[string]string {
@@ -63,6 +81,34 @@ func NewUserSingUp(body io.Reader) (*UserSignUp, map[string]string) {
 }
 
 
+func NewUserLogin (body io.Reader) (*UserLogin, map[string]string) {
+    
+    var (
+        user UserLogin
+        field_errors map[string]string
+    )
+
+
+    field_errors = make(map[string]string)
+    json.NewDecoder(body).Decode(&user)
+    
+
+
+    err := Validate.Struct(user)
+    if err != nil {
+		var validateErrs validator.ValidationErrors
+		if errors.As(err, &validateErrs) {
+			for _, e := range validateErrs {
+                
+                field_errors[strings.ToLower(e.Field())] = Errors[e.Field()]
+			}
+		}
+        return nil, field_errors
+    }
+
+    return &user, nil
+}
+
 
 func NewUserEamil(body io.Reader) (*UserEmail, map[string]string) {
     
@@ -88,7 +134,6 @@ func NewUserEamil(body io.Reader) (*UserEmail, map[string]string) {
 		}
         return nil, field_errors
     }
-
     return &user, nil
 }
 
