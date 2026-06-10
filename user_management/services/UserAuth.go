@@ -33,12 +33,7 @@ func NewAuthService () *AuthService {
 
         cacheAuthService =  &AuthService{ownerEmail: os.Getenv("OWNER"), sendEmailPassword: os.Getenv("EMAIL_PASSWORD"), jwtSecret: []byte(os.Getenv("JWT_SECRET")) }
     } 
-
-
     return  cacheAuthService
-
-
-
 }
 
 

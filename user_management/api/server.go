@@ -9,6 +9,7 @@ import (
     "github.com/hatim-lahwaouir/Hypertube/user_management/utils"
     "github.com/hatim-lahwaouir/Hypertube/user_management/models"
     "fmt"
+    "os"
     "github.com/joho/godotenv"
     "log"
 )
@@ -36,15 +37,17 @@ func StartServer(server http.Server) error {
     // start db
     fmt.Println("start db")
     db := models.StartDb() 
+    maxUploadSize := int64(5 * 1024 * 1024)
     // setup services 
     authService := services.NewAuthService()
+    fileUploadService := services.NewFileUploadService(os.Getenv("FILE_UPLOAD_PATH"), maxUploadSize) 
     // setup respositories 
     userRepository := models.NewUserRepository(db)
 
 
     // Setup Handlers 
 
-    newUser:= handler.NewUserHandler(userRepository, authService)
+    newUser:= handler.NewUserHandler(userRepository, authService, fileUploadService)
     router := http.NewServeMux()
     authRouter  :=  http.NewServeMux()
 
@@ -55,7 +58,9 @@ func StartServer(server http.Server) error {
 
 
     // routes that need authentication 
-    authRouter.HandleFunc("GET /me", utils.MakeHandler(newUser.GetCurrentUserInfo))
+    authRouter.HandleFunc("GET /users/{id}", utils.MakeHandler(newUser.GetUserInfo))
+    authRouter.HandleFunc("PATCH /users/{id}", utils.MakeHandler(newUser.UpdateUserData))
+    authRouter.HandleFunc("POST /upload", utils.MakeHandler(newUser.UploadPic))
 
     router.Handle("/", middleware.Auth(authRouter))
     server.Handler = router

@@ -1,6 +1,6 @@
-[ ] authentication 
-[ ] add jwt 
-[ ] password hashing
-[ ] user edit their data  
+[x] authentication 
+[x] add jwt 
+[x] password hashing
 [ ] user image upload 
+[ ] user edit their data  
 

@@ -20,14 +20,24 @@ type UserEmail struct {
 }
 
 
+
 type User struct {
-    ID           uint64 `gorm:"primarykey"`
-    Username string  `gorm:"unique;not null"`
-    Email string `gorm:"unique;not null"`
-    Password string `gorm:"not null"` 
-    FirstName string  `gorm:"not null"`
-    LastName string  `gorm:"not null"`
-    CreatedAt time.Time `gorm:"not null"`
+    ID           uint64 `gorm:"primarykey"  json:"id,omitempty"`
+    Username string  `gorm:"unique;not null"  json:"username,omitempty"`
+    Email string `gorm:"unique;not null"  json:"email,omitempty"`
+    Password string `gorm:"not null" json:"-"` 
+    FirstName string  `gorm:"not null" json:"first_name,omitempty"`
+    LastName string  `gorm:"not null" json:"last_name,omitempty"`
+    ProfilePic string `gorm:"default:default.png" json:"profile_pic,omitempty"`
+    CreatedAt time.Time `gorm:"not null" json:"-"`
+}
+
+type UserChangeEmail struct {
+    UpdatedAt time.Time 
+    Code  string
+    NewEmail string `gorm:"unique;not null"`
+    UserID uint64  `gorm:"unique;not null"` 
+    Owner  User `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;foreignKey:UserID"`
 }
 
 
@@ -136,17 +146,84 @@ func (u *UserRepository) GetUserPassword(user dto.UserLogin)  (User, bool , erro
 
 
 
-func (u *UserRepository) GetCurrentUserInfo (user dto.AuthUser)  (*dto.CurrentUserInfo , error) {
+func (u *UserRepository) GetCurrentUserInfo (user dto.AuthUser)  (*User , error) {
     var (
         user_model User
     )
 
-    res := u.db.Model(&User{}).Select("id", "email", "username", "first_name", "last_name").Where("id = ?", user.ID).First(&user_model)
+    res := u.db.Model(&User{}).Select("id", "email", "username", "first_name", "last_name", "profile_pic").Where("id = ?", user.ID).First(&user_model)
 
     if res.Error != nil {
         return nil,  res.Error
     }
 
 
-    return  &dto.CurrentUserInfo{ID: user_model.ID, Username: user_model.Username, LastName: user_model.LastName, FirstName: user_model.LastName, Email: user_model.Email} , nil
+    return  &user_model , nil
 }
+
+func (u *UserRepository) GetOtherUserInfo (user dto.AuthUser)  (*User ,bool,  error) {
+    var (
+        user_model User
+    )
+    
+    res := u.db.Model(&User{}).Select("id", "username", "profile_pic").Where("id = ?", user.ID).First(&user_model)
+    if errors.Is(res.Error, gorm.ErrRecordNotFound) {
+       return nil, false, nil
+    }
+    if res.Error != nil {
+        return nil,false,  res.Error
+    }
+
+
+    return &user_model, true, nil 
+}
+
+func (u *UserRepository) UpdateUserPic(user dto.AuthUser, profile_pic_path string)  error {
+    
+
+    res := u.db.Model(&User{}).Where("id = ?", user.ID ).Update("porfile_pic",profile_pic_path)
+
+    return res.Error
+}
+
+
+
+func (u *UserRepository) UpdateNonSensetiveData(user dto.AuthUser, userData *dto.EditUserInfo)   error {
+
+    res := u.db.Model(&User{ID: user.ID}).Updates(User{Username : userData.Username, ProfilePic : userData.ProfilePic})
+
+
+    return  res.Error 
+}
+
+
+func (u *UserRepository) UpdateUserPassword(user dto.AuthUser, hashedPassword string)   error {
+
+    res := u.db.Model(&User{ID: user.ID}).Updates(User{Password : hashedPassword})
+
+    return  res.Error 
+}
+
+func (u *UserRepository) GetUserPasswordWithID(user dto.AuthUser)  (string , error) {
+    var (
+        user_model User
+    )
+
+    res := u.db.Model(&User{}).Select("id", "password").Where("id = ?", user.ID).First(&user_model)
+
+    if res.Error != nil {
+        if errors.Is(res.Error, gorm.ErrRecordNotFound) {
+            return "", nil
+        } else {
+             return "", res.Error
+
+        }
+    }
+
+
+    return  user_model.Password, nil 
+}
+
+
+
+

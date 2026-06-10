@@ -8,6 +8,7 @@ import (
     "github.com/hatim-lahwaouir/Hypertube/user_management/services"
     "github.com/hatim-lahwaouir/Hypertube/user_management/models"
     "net/http"
+    "strconv"
     "time"
 )
 
@@ -15,11 +16,13 @@ import (
 type User struct  {
     UserRep *models.UserRepository
     AuthService *services.AuthService 
+    FileUploadService *services.FileUploadService
+    MaxUploadSize int64
 }
 
 
-func NewUserHandler(userRepo *models.UserRepository, auth *services.AuthService ) *User {
-    return &User{UserRep : userRepo, AuthService: auth}
+func NewUserHandler(userRepo *models.UserRepository, auth *services.AuthService, fileUpload *services.FileUploadService) *User {
+    return &User{UserRep : userRepo, AuthService: auth, FileUploadService : fileUpload}
 }
 
 func (u *User) RegisterUser(w http.ResponseWriter, r *http.Request) error{
@@ -34,8 +37,6 @@ func (u *User) RegisterUser(w http.ResponseWriter, r *http.Request) error{
         return utils.NewApiError(http.StatusBadRequest, field_errors)
     }
 
-    // check if username already taken
-    //u.db.Model(&User{}).Where("username = ?", user.Username).Count(&exists)
     
     UsernameExists, err := u.UserRep.UserNameExists(user.Username) 
     if err != nil {
@@ -110,7 +111,7 @@ func (u *User) ValidateEmail(w http.ResponseWriter, r *http.Request) error{
 
     )
 
-    user, field_errors := dto.NewUserEamil(r.Body)
+    user, field_errors := dto.NewUserEmail(r.Body)
 
 
     if user == nil {
@@ -168,16 +169,111 @@ func (u *User) Login(w http.ResponseWriter, r *http.Request) error{
 
 
 
-func (u *User) GetCurrentUserInfo(w http.ResponseWriter, r *http.Request) error{
-    userId := u.AuthService.GetUser(r)
+func (u *User) GetUserInfo(w http.ResponseWriter, r *http.Request) error{
 
-    userInfo, err := u.UserRep.GetCurrentUserInfo(userId)
+    userId := u.AuthService.GetUser(r)
+    id, err := strconv.ParseUint(r.PathValue("id") ,10,64) 
+    
+    if err != nil {
+        return utils.NewApiError(http.StatusBadRequest, "invalid id provided")
+    }
+
+
+    if userId.ID == id {
+
+        userInfo, err := u.UserRep.GetCurrentUserInfo(userId)
+
+        if err != nil {
+                return utils.NewApiError(http.StatusInternalServerError, "Internal Server Error")
+        }
+        return utils.WriteResp(w, http.StatusOK , userInfo)
+    }
+    
+
+    userInfo,exists, err := u.UserRep.GetOtherUserInfo(dto.AuthUser{ID: id})
 
     if err != nil {
             return utils.NewApiError(http.StatusInternalServerError, "Internal Server Error")
     }
+
+    if exists == false {
+            return utils.NewApiError(http.StatusNotFound, "Current user not found")
+    }
     return utils.WriteResp(w, http.StatusOK , userInfo)
 }
 
+
+func (u *User) UpdateUserData(w http.ResponseWriter, r *http.Request) error{
+
+    userId := u.AuthService.GetUser(r)
+    id, err := strconv.ParseUint(r.PathValue("id") ,10,64) 
+    if err != nil {
+        return utils.NewApiError(http.StatusBadRequest, "invalid id provided")
+    }
+    if userId.ID != id {
+        return utils.NewApiError(http.StatusUnauthorized , "Unauthorized")
+    }
+
+
+    userData, field_errors := dto.NewEditUserInfo(r.Body)
+    if userData == nil {
+        return utils.NewApiError(http.StatusBadRequest, field_errors)
+    }
+    
+    
+    if err :=  u.UserRep.UpdateNonSensetiveData(userId, userData); err != nil {
+        return utils.NewApiError(http.StatusBadRequest , "Username already exists")
+    }
+    // update password
+
+        fmt.Println(userData)
+    if len(userData.OldPassword)  != 0  && len(userData.NewPassword) != 0 {
+        passwordHash, err := u.UserRep.GetUserPasswordWithID(userId)
+        if err != nil {
+            return utils.NewApiError(http.StatusInternalServerError, "Internal Server Error")
+        }
+        if u.AuthService.CheckPasswordHash(userData.OldPassword , passwordHash) == false {
+            return utils.NewApiError(http.StatusBadRequest, "invalid password")
+        } 
+
+        newPassword, err := u.AuthService.HashPassword(userData.NewPassword)
+        if err != nil {
+            return utils.NewApiError(http.StatusInternalServerError, "Internal Server Error")
+        }
+       
+
+        if  err := u.UserRep.UpdateUserPassword(userId,newPassword); err != nil {
+            return utils.NewApiError(http.StatusInternalServerError, "Internal Server Error")
+        }
+        // update user password
+
+    }
+
+    // update Email
+    return utils.WriteResp(w, http.StatusOK , "ok")
+}
+
+func (u *User) UploadPic(w http.ResponseWriter, r *http.Request) error{
+    userId := u.AuthService.GetUser(r)
+
+    r.ParseMultipartForm(u.MaxUploadSize)
+    pic , _ , err := r.FormFile("profile_pic")
+    if err != nil {
+        return utils.NewApiError(http.StatusBadRequest, "Error retrieving profile picture")
+    }
+    defer pic.Close()
+
+    pic_name ,  err := u.FileUploadService.UploadFile(pic)
+
+    if err != nil {
+        return utils.NewApiError(http.StatusBadRequest, err.Error())
+    }
+
+    if err := u.UserRep.UpdateUserPic(userId, pic_name); err != nil {
+            return utils.NewApiError(http.StatusInternalServerError, "Internal Server Error")
+    }
+
+    return utils.WriteResp(w, http.StatusCreated, "imag uploaded !")
+}
 
 
