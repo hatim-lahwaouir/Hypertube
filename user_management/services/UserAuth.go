@@ -6,9 +6,10 @@ import (
     "github.com/golang-jwt/jwt/v5"
     "github.com/hatim-lahwaouir/Hypertube/user_management/dto"
     "time"
-    "math/rand"
+    "math/big"
     "strconv"
     "net/http"
+    "crypto/rand"
     "fmt"
     "golang.org/x/crypto/bcrypt"
     "errors"
@@ -20,6 +21,7 @@ type AuthService  struct {
     ownerEmail string
     sendEmailPassword string
     jwtSecret []byte 
+    CodeLength int
 
 }
 
@@ -31,7 +33,7 @@ func NewAuthService () *AuthService {
 
     if cacheAuthService == nil {
 
-        cacheAuthService =  &AuthService{ownerEmail: os.Getenv("OWNER"), sendEmailPassword: os.Getenv("EMAIL_PASSWORD"), jwtSecret: []byte(os.Getenv("JWT_SECRET")) }
+        cacheAuthService =  &AuthService{ownerEmail: os.Getenv("OWNER"), sendEmailPassword: os.Getenv("EMAIL_PASSWORD"), jwtSecret: []byte(os.Getenv("JWT_SECRET")), CodeLength: 10 }
     } 
     return  cacheAuthService
 }
@@ -72,19 +74,20 @@ func (auth *AuthService) SendCodeViaMail(email string, code string) error {
 
 
 
-
-func (auth *AuthService) GenerateOneTimeCode() string {
-    var (
-        nbr int
-    )
-
-
-    rand.Seed(time.Now().UnixNano())
-    min := 999999 
-    max := 9999999 
-    nbr = rand.Intn(max - min + 1) + min
-    return strconv.Itoa(nbr)
+func (auth *AuthService) GenerateOneTimeCode() (string,error) {
+	var code string
+	max := big.NewInt(10)
+	
+	for i := 0; i < auth.CodeLength; i++ {
+		num, err := rand.Int(rand.Reader, max)
+		if err != nil {
+			return "", err
+		}
+		code += num.String()
+	}
+	return code, nil
 }
+
 
 
 func (auth *AuthService) GenerateJWT(userID uint64) (string, error) {

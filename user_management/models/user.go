@@ -30,14 +30,14 @@ type User struct {
     LastName string  `gorm:"not null" json:"last_name,omitempty"`
     ProfilePic string `gorm:"default:default.png" json:"profile_pic,omitempty"`
     CreatedAt time.Time `gorm:"not null" json:"-"`
+    NewEmail UserChangeEmail  ` gorm:"foreignKey:UserID" json:"new_email,omitempty" `
 }
 
 type UserChangeEmail struct {
-    UpdatedAt time.Time 
-    Code  string
-    NewEmail string `gorm:"unique;not null"`
-    UserID uint64  `gorm:"unique;not null"` 
-    Owner  User `gorm:"constraint:OnUpdate:CASCADE,OnDelete:CASCADE;foreignKey:UserID"`
+    UpdatedAt time.Time  `json:"-"` 
+    Code  string `json:"-"` 
+    NewEmail string `gorm:"unique;not null" json:"email,omitempty"` 
+    UserID uint64  `gorm:"unique;not null" json:"-"`  
 }
 
 
@@ -124,6 +124,17 @@ func (u *UserRepository) UpsertUserEmailCode(user dto.UserEmail, code string) er
 }
 
 
+func (u *UserRepository) UpsertUserChangeEmailCode( user dto.AuthUser, email string, code string) error {
+        
+        res := u.db.Clauses(clause.OnConflict{
+        Columns:   []clause.Column{{Name: "user_id"}},
+        DoUpdates: clause.AssignmentColumns([]string{"new_email","code", "updated_at"}),
+        }).Create(&UserChangeEmail{UserID: user.ID, Code: code, NewEmail: email, UpdatedAt: time.Now()})
+
+
+        return res.Error 
+}
+
 func (u *UserRepository) GetUserPassword(user dto.UserLogin)  (User, bool , error) {
     var (
         user_model User
@@ -151,7 +162,7 @@ func (u *UserRepository) GetCurrentUserInfo (user dto.AuthUser)  (*User , error)
         user_model User
     )
 
-    res := u.db.Model(&User{}).Select("id", "email", "username", "first_name", "last_name", "profile_pic").Where("id = ?", user.ID).First(&user_model)
+    res := u.db.Model(&User{}).Select("id", "email", "username", "first_name", "last_name", "profile_pic").Where("id = ?", user.ID).Preload("NewEmail").First(&user_model)
 
     if res.Error != nil {
         return nil,  res.Error
@@ -181,7 +192,7 @@ func (u *UserRepository) GetOtherUserInfo (user dto.AuthUser)  (*User ,bool,  er
 func (u *UserRepository) UpdateUserPic(user dto.AuthUser, profile_pic_path string)  error {
     
 
-    res := u.db.Model(&User{}).Where("id = ?", user.ID ).Update("porfile_pic",profile_pic_path)
+    res := u.db.Model(&User{}).Where("id = ?", user.ID ).Update("profile_pic",profile_pic_path)
 
     return res.Error
 }
@@ -224,6 +235,39 @@ func (u *UserRepository) GetUserPasswordWithID(user dto.AuthUser)  (string , err
     return  user_model.Password, nil 
 }
 
+
+func (u *UserRepository) GetUserCodeChangeEmail(user dto.AuthUser)  (*UserChangeEmail , bool ,error) {
+    var (
+        user_model UserChangeEmail
+    )
+
+    res := u.db.Model(&UserChangeEmail{}).Where("user_id = ?", user.ID).First(&user_model)
+
+    if res.Error != nil {
+        if errors.Is(res.Error, gorm.ErrRecordNotFound) {
+            return nil, false,  nil
+        } else {
+             return nil, false,  res.Error
+
+        }
+    }
+
+    return  &user_model,true, nil 
+}
+
+func (u *UserRepository) ChangeUserEmail(user dto.AuthUser, email string)  (error) {
+    
+    res := u.db.Model(&User{ID: user.ID}).Updates(User{Email : email})
+
+    return  res.Error 
+}
+
+
+func (u *UserRepository) DeleteUserChangeEmail(user dto.AuthUser)  (error) {
+    res := u.db.Where("user_id = ?", user.ID).Delete(&UserChangeEmail{})
+
+    return res.Error
+}
 
 
 

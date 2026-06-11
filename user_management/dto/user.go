@@ -35,6 +35,10 @@ type  AuthUser struct {
     ID  uint64
 }
 
+type  UserCode struct {
+    Code     string  `json:"code" validate:"required"`
+}
+
 type UserEmail struct{
     Email string   `json:"email" validate:"required,email"`
 }
@@ -45,11 +49,11 @@ type UserLogin struct{
 }
 
 type EditUserInfo struct{
-    Email        string   `json:"email" validate:"email"`
-    Username     string   `json:"username", validate:"omitempty,min=3,max=50,alphanum"`
-    ProfilePic   string   `json:"profile_pic", validate:"omitempty,min=3,max=50,alphanum"`
+    Email        string   `json:"email" validate:"omitempty,email"`
+    Username     string   `json:"username" validate:"omitempty,min=3,max=50,alphanum"`
+    ProfilePic   string   `json:"profile_pic" validate:"omitempty,url"`
     OldPassword  string   `json:"old_password" validate:"required_with=NewPassword,omitempty,min=10,max=50,strong_password"`
-    NewPassword  string   `json:"password" validate:"omitempty,min=10,max=50,strong_password""`
+    NewPassword  string   `json:"password" validate:"omitempty,min=10,max=50,strong_password"`
 }
 
 var Errors map[string]string  = map[string]string {
@@ -59,6 +63,23 @@ var Errors map[string]string  = map[string]string {
     "OldPassword" : "required with new password, min len 10, max len 50, must conatins alphanumeric, special characters, lower case letter and upper case letters  ",
     "FirstName" : "required, only alpha , min len 3 and max len 50",
     "LastName" : "required, only alpha , min len 3 and  max len 50",
+}
+
+
+
+
+func NewUserCode(body io.Reader) (*UserCode) {
+    var (
+        user UserCode
+    )
+
+
+    json.NewDecoder(body).Decode(&user)
+    err := Validate.Struct(user)
+    if err != nil {
+        return nil
+    }
+    return &user
 }
 
 

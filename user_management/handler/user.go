@@ -15,14 +15,15 @@ import (
 
 type User struct  {
     UserRep *models.UserRepository
+    UserManagementService *services.UserManagementService
     AuthService *services.AuthService 
     FileUploadService *services.FileUploadService
     MaxUploadSize int64
 }
 
 
-func NewUserHandler(userRepo *models.UserRepository, auth *services.AuthService, fileUpload *services.FileUploadService) *User {
-    return &User{UserRep : userRepo, AuthService: auth, FileUploadService : fileUpload}
+func NewUserHandler(userRepo *models.UserRepository, auth *services.AuthService, fileUpload *services.FileUploadService, userManagementService *services.UserManagementService) *User {
+    return &User{UserRep : userRepo, AuthService: auth, FileUploadService : fileUpload, UserManagementService : userManagementService}
 }
 
 func (u *User) RegisterUser(w http.ResponseWriter, r *http.Request) error{
@@ -72,7 +73,6 @@ func (u *User) RegisterUser(w http.ResponseWriter, r *http.Request) error{
     }
 
     // delete record
-    //u.db.Where("email = ?", user.Email).Delete(&models.UserEmail{})
     if err = u.UserRep.DeleteUserCodeEmail(user.Email); err != nil {
         return utils.NewApiError(http.StatusInternalServerError, "Internal Server Error")
     }
@@ -118,7 +118,10 @@ func (u *User) ValidateEmail(w http.ResponseWriter, r *http.Request) error{
         return utils.NewApiError(http.StatusBadRequest, field_errors)
     }
 
-    code = u.AuthService.GenerateOneTimeCode()
+    code, err  := u.AuthService.GenerateOneTimeCode()
+    if err != nil {
+        return utils.NewApiError(http.StatusInternalServerError, "Internal Server Error")
+    }
     
 
     if err := u.UserRep.UpsertUserEmailCode(*user, code); err != nil {
@@ -211,11 +214,14 @@ func (u *User) UpdateUserData(w http.ResponseWriter, r *http.Request) error{
         return utils.NewApiError(http.StatusBadRequest, "invalid id provided")
     }
     if userId.ID != id {
+        fmt.Println(userId.ID)
         return utils.NewApiError(http.StatusUnauthorized , "Unauthorized")
     }
 
 
     userData, field_errors := dto.NewEditUserInfo(r.Body)
+
+
     if userData == nil {
         return utils.NewApiError(http.StatusBadRequest, field_errors)
     }
@@ -250,8 +256,97 @@ func (u *User) UpdateUserData(w http.ResponseWriter, r *http.Request) error{
     }
 
     // update Email
+    if len(userData.Email) != 0 {
+        // check if email already exists 
+
+        emailExists , err := u.UserRep.EmailExists(userData.Email)
+
+        if err != nil {
+            return utils.NewApiError(http.StatusInternalServerError, "Internal Server Error")
+        }
+
+        if emailExists {
+            return utils.NewApiError(http.StatusBadRequest , "Email already exists")
+        }
+        // generate code 
+        code, err  := u.AuthService.GenerateOneTimeCode()
+        if err != nil {
+            return utils.NewApiError(http.StatusInternalServerError, "Internal Server Error")
+        }
+        // send to user
+        if err := u.UserManagementService.SendChangeEmail(userData.Email, code); err != nil {
+            return utils.NewApiError(http.StatusInternalServerError, "Internal Server Error")
+        }
+
+
+        // save code to database
+        if  err := u.UserRep.UpsertUserChangeEmailCode(userId,userData.Email, code); err != nil {
+            return utils.NewApiError(http.StatusInternalServerError, "Internal Server Error")
+        }
+
+    }
+    
+     // install an image if it was provided 
+    if len(userData.ProfilePic) != 0 {
+
+            fmt.Println(userData.ProfilePic)
+            pic_name , err := u.FileUploadService.DownloadAnImage(userData.ProfilePic)
+            if err != nil {
+                return utils.NewApiError(http.StatusBadRequest , err.Error())
+            }
+            if err := u.UserRep.UpdateUserPic(userId, pic_name); err != nil {
+                return utils.NewApiError(http.StatusInternalServerError, "Internal Server Error")
+            }
+    }
+
     return utils.WriteResp(w, http.StatusOK , "ok")
 }
+
+
+func (u *User) ValidateMyNewEmail(w http.ResponseWriter, r *http.Request) error{
+    var (
+        duration time.Duration
+        code *dto.UserCode 
+    )
+    userId := u.AuthService.GetUser(r)
+    code = dto.NewUserCode(r.Body)
+
+    duration , _ = time.ParseDuration("24h00m0s")
+    if code == nil {
+            return utils.NewApiError(http.StatusInternalServerError, "Internal Server Error")
+    }
+
+     user_model, exists, err := u.UserRep.GetUserCodeChangeEmail(userId)
+
+     if err != nil  {
+            return utils.NewApiError(http.StatusInternalServerError, "Internal Server Error")
+     }
+     if exists == false  {
+            return utils.NewApiError(http.StatusBadRequest , "there is no change email")
+     }
+
+     if code.Code != user_model.Code {
+            return utils.NewApiError(http.StatusBadRequest , "Invalid Code")
+     }
+
+    // delete record
+    if err := u.UserRep.DeleteUserChangeEmail(userId); err != nil {
+            return utils.NewApiError(http.StatusInternalServerError, "Internal Server Error")
+    }
+
+    if user_model.UpdatedAt.Sub(time.Now()).Abs() >  duration {
+            return utils.NewApiError(http.StatusUnauthorized , "your code has expired")
+    }
+
+    // change User Email
+
+    if err := u.UserRep.ChangeUserEmail(userId,user_model.NewEmail); err != nil {
+            return utils.NewApiError(http.StatusInternalServerError, "Internal Server Error")
+    }
+   
+    return utils.WriteResp(w, http.StatusOK , "email changed")
+}
+
 
 func (u *User) UploadPic(w http.ResponseWriter, r *http.Request) error{
     userId := u.AuthService.GetUser(r)

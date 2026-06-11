@@ -1,11 +1,9 @@
 package services
 
 import (
-    "math/rand/v2"
     gomail "gopkg.in/mail.v2"
     "os"
      "fmt"
-    "strconv"
 )
 
 
@@ -57,16 +55,4 @@ func (u *UserManagementService) SendChangeEmail(email string, code string) error
 
 
 
-func (u *UserManagementService) GenerateOneTimeCodeForUser( userID uint64) string {
-    var (
-        nbr int
-    )
 
-	src := rand.NewPCG(userID,0)
-	r := rand.New(src)
-    min := 999999 
-    max := 9999999 
-
-    nbr = r.IntN(max - min + 1) + min
-    return strconv.Itoa(nbr)
-}

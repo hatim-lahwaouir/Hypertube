@@ -6,8 +6,10 @@ import (
     "os"
     "io"
     "github.com/google/uuid"
+    "bufio"
     "path/filepath"
     "strings"
+    "net/url"
     "net/http"
     "fmt"
     "time"
@@ -46,7 +48,8 @@ func (i *FileUploadService) UploadFile(file multipart.File) (string, error) {
         filePath string
     )
     // check for mim Type
-    if i.ValidMimType(file) == false {
+    valid, src := i.ValidMimType(file)
+    if  valid  == false{
         return "", fmt.Errorf("Invalid mim type we only support %s ", strings.Join(i.allowedMimTypes, ",")) 
 
     }
@@ -58,8 +61,8 @@ func (i *FileUploadService) UploadFile(file multipart.File) (string, error) {
     if err != nil {
         return "", fmt.Errorf("unexpected error please try again") 
     }
-
-    _ , err = io.Copy(dst, file)
+    defer dst.Close()
+    _ , err = io.Copy(dst, src)
 
     if err != nil {
 
@@ -70,35 +73,95 @@ func (i *FileUploadService) UploadFile(file multipart.File) (string, error) {
 }
 
 
-func (i *FileUploadService) ValidMimType(file multipart.File) bool {
+func (i *FileUploadService) ValidMimType(file io.Reader) (bool, io.Reader) {
 
     var (
         valid bool
     )
 
-    valid = false
-    buffer := make([]byte, 512)
 
-    bytesRead , err := file.Read(buffer)
+    bufReader := bufio.NewReader(file)
+    valid = false
+    buffer, err := bufReader.Peek(512)
     if err != nil {
-            fmt.Println("file Upload ", err)
-            return false
+            return false, bufReader
     }
 
-    contentType := http.DetectContentType(buffer[:bytesRead])
+    contentType := http.DetectContentType(buffer)
 
     for _, value := range i.allowedMimTypes {
         if value == contentType {
+
             valid = true
         }
     } 
 
-    if _, err := file.Seek(0, io.SeekStart); err != nil {
-        fmt.Println("file Upload ", err)
-        return false 
-	}
 
-
-    return valid 
+    return valid, bufReader
 }
+
+
+func (i *FileUploadService) DownloadAnImage(imgUrl string) (string, error) {
+    
+    var (
+        fileName string
+        filePath string
+
+        checkBuf [1]byte
+    )
+    const maxLimit int64 = 5 * 1024 * 1024  // 5 MB
+
+
+    if _, err := url.Parse(imgUrl); err != nil {
+        
+        return "", fmt.Errorf("Invalid img URl")
+    }
+
+
+
+    resp, err := http.Get(imgUrl)
+    if err != nil {
+        return "", fmt.Errorf("img URl isn't working")
+    }
+    defer resp.Body.Close()
+    
+    imgStream := io.LimitReader(resp.Body, maxLimit)
+
+    fileName =  fmt.Sprintf("%s-%d", uuid.NewString(), time.Now().Unix())
+    filePath = filepath.Join(i.path, fileName)
+
+    dst , err := os.Create(filePath)
+    if err != nil {
+        return "", fmt.Errorf("error processing the img") 
+    }
+    defer dst.Close()
+
+   
+    valid, src := i.ValidMimType(imgStream)
+    if valid  == false {
+        return "", fmt.Errorf("Invalid mim type we only support %s ", strings.Join(i.allowedMimTypes, ",")) 
+    }
+
+
+    _ , err = io.Copy(dst, src)
+    if err != nil {
+
+    }
+
+	n, _ := src.Read(checkBuf[:])
+	if n > 0 {
+        err := os.Remove(filePath)
+        if err != nil {
+		    return "", fmt.Errorf("error processing the img")
+        }
+
+		return "", fmt.Errorf("image exceeds the maximum allowed size of 5MB")
+	}
+    return fileName , nil
+}
+
+
+
+
+
 

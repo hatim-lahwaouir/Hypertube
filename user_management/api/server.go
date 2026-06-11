@@ -41,13 +41,14 @@ func StartServer(server http.Server) error {
     // setup services 
     authService := services.NewAuthService()
     fileUploadService := services.NewFileUploadService(os.Getenv("FILE_UPLOAD_PATH"), maxUploadSize) 
+    userManagementService := services.NewUserManagementService()
     // setup respositories 
     userRepository := models.NewUserRepository(db)
 
 
     // Setup Handlers 
 
-    newUser:= handler.NewUserHandler(userRepository, authService, fileUploadService)
+    newUser:= handler.NewUserHandler(userRepository, authService, fileUploadService,userManagementService)
     router := http.NewServeMux()
     authRouter  :=  http.NewServeMux()
 
@@ -58,9 +59,11 @@ func StartServer(server http.Server) error {
 
 
     // routes that need authentication 
+    // 
     authRouter.HandleFunc("GET /users/{id}", utils.MakeHandler(newUser.GetUserInfo))
     authRouter.HandleFunc("PATCH /users/{id}", utils.MakeHandler(newUser.UpdateUserData))
     authRouter.HandleFunc("POST /upload", utils.MakeHandler(newUser.UploadPic))
+    authRouter.HandleFunc("POST /users/changeEmail", utils.MakeHandler(newUser.ValidateMyNewEmail))
 
     router.Handle("/", middleware.Auth(authRouter))
     server.Handler = router
