@@ -1,6 +1,8 @@
 [x] authentication 
 [x] add jwt 
 [x] password hashing
-[ ] user image upload 
-[ ] user edit their data  
+[x] user image upload 
+[x] user edit their data  
+[ ]  user reset password  
+[ ] oauth using google and 42 netowork, add github
 

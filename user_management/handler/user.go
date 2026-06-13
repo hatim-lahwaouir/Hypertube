@@ -155,7 +155,6 @@ func (u *User) Login(w http.ResponseWriter, r *http.Request) error{
 
     
 
-    fmt.Println(user_model.ID)
     if u.AuthService.CheckPasswordHash(user.Password, user_model.Password) ==  false {
         return utils.NewApiError(http.StatusUnauthorized, "Invalid credentials")
     }
@@ -214,7 +213,6 @@ func (u *User) UpdateUserData(w http.ResponseWriter, r *http.Request) error{
         return utils.NewApiError(http.StatusBadRequest, "invalid id provided")
     }
     if userId.ID != id {
-        fmt.Println(userId.ID)
         return utils.NewApiError(http.StatusUnauthorized , "Unauthorized")
     }
 
@@ -232,7 +230,6 @@ func (u *User) UpdateUserData(w http.ResponseWriter, r *http.Request) error{
     }
     // update password
 
-        fmt.Println(userData)
     if len(userData.OldPassword)  != 0  && len(userData.NewPassword) != 0 {
         passwordHash, err := u.UserRep.GetUserPasswordWithID(userId)
         if err != nil {
@@ -286,10 +283,9 @@ func (u *User) UpdateUserData(w http.ResponseWriter, r *http.Request) error{
 
     }
     
+    fmt.Println(userData)
      // install an image if it was provided 
     if len(userData.ProfilePic) != 0 {
-
-            fmt.Println(userData.ProfilePic)
             pic_name , err := u.FileUploadService.DownloadAnImage(userData.ProfilePic)
             if err != nil {
                 return utils.NewApiError(http.StatusBadRequest , err.Error())

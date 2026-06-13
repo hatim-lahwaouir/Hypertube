@@ -51,7 +51,7 @@ type UserLogin struct{
 type EditUserInfo struct{
     Email        string   `json:"email" validate:"omitempty,email"`
     Username     string   `json:"username" validate:"omitempty,min=3,max=50,alphanum"`
-    ProfilePic   string   `json:"profile_pic" validate:"omitempty,url"`
+    ProfilePic   string   `json:"profile_pic" validate:"url"`
     OldPassword  string   `json:"old_password" validate:"required_with=NewPassword,omitempty,min=10,max=50,strong_password"`
     NewPassword  string   `json:"password" validate:"omitempty,min=10,max=50,strong_password"`
 }
