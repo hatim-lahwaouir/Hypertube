@@ -3,6 +3,7 @@ package services
 import (
     "github.com/hatim-lahwaouir/Hypertube/movie_streaming/types"
     "github.com/hatim-lahwaouir/Hypertube/movie_streaming/models"
+    "github.com/hatim-lahwaouir/Hypertube/movie_streaming/dto"
     "net/url"
     "compress/gzip"
     "path/filepath"
@@ -180,4 +181,11 @@ func (m *DownloadMovieService) DownloadImg(URL string) (string, error) {
     }
 
     return fileName, nil
+}
+
+
+
+func (m *DownloadMovieService) SearchForMovies(data * dto.MovieFilters) {
+    m.MoviesRep.GetMoviWithGenre(data)
+
 }

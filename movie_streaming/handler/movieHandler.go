@@ -22,9 +22,11 @@ func NewMovieHandler(m  *services.DownloadMovieService) *Movie{
 
 
 func (m *Movie) Hello(w http.ResponseWriter, r *http.Request) error{
+
+    // download a specific movie
     
 
-    m.MovieService.DownloadMovieInfo(795)
+    m.MovieService.DownloadMovieInfo(794)
     return utils.WriteResp(w, http.StatusCreated, "Account created wait for an email will be sent to you ! ")
 }
 
@@ -41,6 +43,7 @@ func (m *Movie) MovieSuggestions(w http.ResponseWriter, r *http.Request) error{
         return utils.WriteResp(w, http.StatusBadRequest, field_errors)
 
     }
+    m.MovieService.SearchForMovies(moviesFilter)
     fmt.Println(moviesFilter)
     return utils.WriteResp(w, http.StatusCreated, "Account created wait for an email will be sent to you ! ")
 }

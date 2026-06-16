@@ -15,10 +15,10 @@ import (
 
 type MovieFilters struct{
     Genre   string  `json:"genre" validate:"omitempty,valid_genre"`
-    Name    string  `json:"name" validate:"required"`
-    OrderBy string  `json:"order_by" validate:"oneof=desc asc"`
-    SortBy  string  `json:"sort_by" validate:"required,oneof=title year rating peers seeds"`
-    Year    string  `json:"Year" validate:"required,is_year"`
+    Name    string  `json:"name" validate:"omitempty,required"`
+    OrderBy string  `json:"order_by" validate:"omitempty,oneof=desc asc"`
+    SortBy  string  `json:"sort_by" validate:"omitempty,oneof=title year rating peers seeds"`
+    Year    string  `json:"Year" validate:"omitempty,is_year"`
 }
 
 

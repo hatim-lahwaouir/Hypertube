@@ -5,9 +5,11 @@ package models
 
 import (
 
-  "gorm.io/gorm/clause"
   "gorm.io/driver/postgres"
-  "gorm.io/gorm"
+  "gorm.io/gorm/logger"
+  "time"
+
+ "gorm.io/gorm"
   "fmt"
   "os"
   "log"
@@ -15,60 +17,23 @@ import (
 
 
 
-var imdbGenres []string = []string{ 
-  "Action",
-  "Adult",
-  "Adventure",
-  "Animation",
-  "Biography",
-  "Comedy",
-  "Crime",
-  "Documentary",
-  "Drama",
-  "Family",
-  "Fantasy",
-  "Film-Noir",
-  "Game-Show",
-  "History",
-  "Horror",
-  "Music",
-  "Musical",
-  "Mystery",
-  "News",
-  "Reality-TV",
-  "Romance",
-  "Sci-Fi",
-  "Short",
-  "Sport",
-  "Talk-Show",
-  "Thriller",
-  "War",
-  "Western",
-}
-
-
-func setupGenres(db *gorm.DB)  error {
-    var (
-        genre_model []Genre
-    )
 
 
 
-    for _, val := range(imdbGenres){
-        genre_model = append(genre_model, Genre{Type: val})
-    }
-
-	res := db.Clauses(clause.OnConflict{
-		DoNothing: true,
-	}).Create(&genre_model)
-
-
-    return res.Error 
-}
 
 func StartDb() *gorm.DB {
 
 
+	newLogger := logger.New(
+		log.New(os.Stdout, "\r\n", log.LstdFlags), // IO writer
+		logger.Config{
+			SlowThreshold:             time.Second,   // Slow SQL threshold
+			LogLevel:                  logger.Info,   // Log level set to Info for all queries
+			IgnoreRecordNotFoundError: true,          // Ignore ErrRecordNotFound error for logger
+			ParameterizedQueries:      false,         // Don't include params in the SQL log if true
+			Colorful:                  true,          // Enable color printing
+		},
+	)
 
     dsn := fmt.Sprintf("host=localhost user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=Asia/Shanghai", 
         os.Getenv("POSTGRES_USER"),
@@ -77,7 +42,7 @@ func StartDb() *gorm.DB {
         os.Getenv("PORT"))
        
 
-    db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+    db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{Logger: newLogger,})
 
 
     //migration
