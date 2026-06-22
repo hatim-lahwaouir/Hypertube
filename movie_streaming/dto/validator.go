@@ -57,28 +57,19 @@ func init() {
 		return true
 	})
 
-
-    Validate.RegisterValidation("is_year", func(fl validator.FieldLevel) bool {
+    Validate.RegisterValidation("valid_year", func(fl validator.FieldLevel) bool {
 		value := fl.Field().Interface().(string)
-
-
-        year, err := strconv.Atoi(value)
-
+        year , err := strconv.Atoi(value)
 
         if err != nil {
-            return false
-          } 
-
-
-        
-
-        if year < 1900 || year > time.Now().Year() {
-            return false
+            return false 
         }
 
+        if  year >  time.Now().Year() || year < 1900 {
+            return  false
+        }
 		return true
 	})
-
 
 }
 

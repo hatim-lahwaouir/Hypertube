@@ -9,7 +9,7 @@ import (
 
 type Genre struct {
     Id        uint64           `gorm:"primaryKey"`
-    Type string `gorm:"unique;not null" json:"type"`
+    Type string                `gorm:"unique;not null" json:"type"`
 }
 
 func setupGenres(db *gorm.DB)  error {

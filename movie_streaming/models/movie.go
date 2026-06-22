@@ -3,17 +3,17 @@ package models
 
 import (
     "gorm.io/gorm"
+    "fmt"
     "errors"
     "time"
     "github.com/hatim-lahwaouir/Hypertube/movie_streaming/types"
     "github.com/hatim-lahwaouir/Hypertube/movie_streaming/dto"
-    "fmt"
  )
 
 
 type Movie struct {
     Id   uint64 `gorm:"primarykey"  json:"id,omitempty"`
-    Name string `gorm:"unique;not null"  json:"username,omitempty"`
+    Name string `gorm:"unique;not null"  json:"name,omitempty"`
     IMDBCode string `gorm:"unique;not null"  json:"imdb_code,omitempty"`
     UpdatedAt time.Time
     Year int 
@@ -25,16 +25,6 @@ type Movie struct {
 }
 
 
-
-type Torrent struct {
-    MovieID uint64
-    Path    string `gorm:"not null"  json:"-"`
-    Size   string `json:"size"`
-    Quality string `json:"quality"`
-    Seeds int `gorm:"not null"  json:"seeds"`
-    Peers int `gorm:"not null"  json:"peers"`
-    CreatedAt time.Time
-}
 
 
 
@@ -83,26 +73,46 @@ func (m *MoviesRep) CreateMovie(data *types.Movie)  error {
      return result.Error
 }
 
- 
-func (m *MoviesRep) MovieExists(id uint64)  (bool, error) {
-    var (
-        exists int64
-    )
+ func (m *MoviesRep) CreateMovies(movies []types.Movie)  error {
+     
+     var (
+        movies_model []Movie
+     )
 
-    exists = 0
-    res := m.db.Model(&Movie{}).Where("id = ?", id).Count(&exists)
+     imdbGenres := types.GetGenres()
 
-    return exists == 1, res.Error
+
+     
+
+    for _, data := range(movies) {
+
+     var genres []Genre
+     for _, val := range data.Genres {
+         genres = append(genres, Genre{Id: imdbGenres[val]})
+     }
+      m := Movie{Id: data.ID,
+        Name: data.Title,
+        IMDBCode: data.IMDBCode,
+        UpdatedAt: time.Now(),
+        Year: data.Year,
+        Description: data.DescriptionFull,
+        Rating: data.Rating,
+        Genre : genres,
+        Thumbnail: data.LargeCoverImage,
+            }
+        movies_model = append(movies_model, m)
+     }
+     result := m.db.Omit("Genre.*").Create(movies_model)
+     return result.Error
 }
 
 
-
-func (m *MoviesRep) GetMovie(id uint64)  (*Movie,bool, error) {
+func (m *MoviesRep) GetMovie(imdb_code string)  (*Movie,bool, error) {
     var (
         movie Movie 
     )
 
-    res := m.db.Model(&Movie{}).Where("id = ?", id).First(&movie)
+    res := m.db.Preload("Torrents").Where("movies.imdb_code = ?", imdb_code).First(&movie)
 
     if res.Error != nil {
         if errors.Is(res.Error, gorm.ErrRecordNotFound) {
@@ -112,17 +122,10 @@ func (m *MoviesRep) GetMovie(id uint64)  (*Movie,bool, error) {
         }
     }
 
+    fmt.Println(">>>>>>>>>>>>>>>>", movie)
     return  &movie ,true, nil 
 }
      
-func (m *MoviesRep) CreateTorrents(t []Torrent)  error {
-
-    res := m.db.Create(t)
-
-    return res.Error 
-}
- 
-
 
 func FilterGenre(filters *dto.MovieFilters) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
@@ -149,8 +152,8 @@ func FilterByName(filters *dto.MovieFilters) func(db *gorm.DB) *gorm.DB {
 
 func OrderBy(filters *dto.MovieFilters) func(db *gorm.DB) *gorm.DB {
 	return func(db *gorm.DB) *gorm.DB {
-		if filters.OrderBy == "" || filters.SortBy == ""{
-			return db // Skip filtering if empty
+		if filters.OrderBy == ""{
+			return db 
 		}
 
         direction := "ASC"
@@ -161,24 +164,30 @@ func OrderBy(filters *dto.MovieFilters) func(db *gorm.DB) *gorm.DB {
 		switch filters.SortBy {
             case "year":
                 column = "year"
-            case "title":
-                column = "title"
-            case "rating":
-                column = "rating"
+            case "name":
+                column = "name"
             default:
-                return db 
+                column = "rating"
 		} 
 		return db.Order(column + " " + direction)
     }
 }
 
-func  (m *MoviesRep) GetMoviWithGenre(filters *dto.MovieFilters) {
+func  (m *MoviesRep) GetMoviesWithFilters(filters *dto.MovieFilters, pagination uint64) ([]Movie, error) {
     var (
         movies []Movie
     )
-    //res := m.db.Model(&Movie{}).Joins("join movie_genres on movie_genres.movie_id = movies.id").Where("movie_genres.genre_id = ?", genreID).Find(&movies)
-    res := m.db.Model(&Movie{}).Scopes(FilterGenre(filters), FilterByName(filters), OrderBy(filters)).Find(&movies)
-    fmt.Println(res.Error, movies)
+    if pagination == 0 {
+        pagination = 1
+    }
+    pageSize := 10
+    
+    offset := (int(pagination) - 1) *  pageSize
+
+    res := m.db.Model(&Movie{}).Scopes(FilterGenre(filters), FilterByName(filters), OrderBy(filters)).Joins("INNER JOIN torrents ON torrents.movie_id = movies.id").Preload("Genre").Offset(offset).Limit(pageSize).Find(&movies)
+
+
+    return movies, res.Error
 }
 
 

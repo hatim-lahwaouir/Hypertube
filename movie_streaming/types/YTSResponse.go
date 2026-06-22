@@ -1,5 +1,18 @@
 package types
 
+type MoviesResponse struct {
+	Status        string   `json:"status"`
+	StatusMessage string   `json:"status_message"`
+	Data DataForMovies     `json:"data"`
+	Meta          Meta     `json:"@meta"` // Handles the special '@' character
+}
+
+// Data holds the payload container.
+type DataForMovies struct {
+	Movie []Movie `json:"movies"`
+    Limit int `json:"limit"`
+    PageNumber int `json:"page_number"`
+}
 
 // MovieResponse represents the root level of the JSON response.
 type MovieResponse struct {

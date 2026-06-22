@@ -39,17 +39,22 @@ func StartServer(server http.Server) error {
     movieRep := models.NewMoviRepository(db)
     //services 
 
-    downalodService := services.NewDownloadMovieService(movieRep)
+    downalodService := services.NewDownloadMovieInfoService(movieRep)
+    StreamingService := services.NewMovieStreamingService()
     // handlers
     movieHandler := handler.NewMovieHandler(downalodService)
+    movieStreamHandler := handler.NewMovieStreamingHandler(StreamingService,movieRep )
 
 
     router := http.NewServeMux()
 
 
     log.Println("db up",db)
-    router.HandleFunc("POST /Hello", utils.MakeHandler(movieHandler.Hello))
-    router.HandleFunc("POST /FilterMovie", utils.MakeHandler(movieHandler.MovieSuggestions))
+    router.HandleFunc("GET /movie/{imdb_code}", utils.MakeHandler(movieHandler.Hello))
+    router.HandleFunc("POST /search-movies/{page}", utils.MakeHandler(movieHandler.MovieSuggestions))
+    router.HandleFunc("POST /search-movies-omdb/{page}", utils.MakeHandler(movieHandler.MovieSuggersionsOMDB))
+
+    router.HandleFunc("POST /movie/{id}/{hash}", utils.MakeHandler(movieStreamHandler.Download))
 
     server.Handler = router
 
