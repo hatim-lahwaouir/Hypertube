@@ -35,7 +35,7 @@ func (ms *MovieStreaming) Download(w http.ResponseWriter, r *http.Request) error
         fmt.Println(">>>>>", err.Error())
         return utils.WriteResp(w, http.StatusBadRequest, "Invalid movie id param")
     }
-    err = ms.MoviStreamingService.ParseTorrent(t.Path)
+    err = ms.MoviStreamingService.ParseTorrent(t)
     if err != nil {
         fmt.Println(t, err.Error())
     }

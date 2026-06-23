@@ -3,8 +3,9 @@ package services
 import (
     "path/filepath"
     "github.com/hatim-lahwaouir/Hypertube/movie_streaming/types"
+    "encoding/hex"
+    "github.com/hatim-lahwaouir/Hypertube/movie_streaming/models"
     "compress/gzip"
-    "fmt"
     "os"
 )
 
@@ -31,8 +32,8 @@ func NewMovieStreamingService() *MovieStreamingService {
 
 
 
-func (ms *MovieStreamingService) ParseTorrent(fileName string) error {
-    filePath := filepath.Join(ms.TorrentPath, fileName)
+func (ms *MovieStreamingService) ParseTorrent(torrent *models.Torrent) error {
+    filePath := filepath.Join(ms.TorrentPath, torrent.Path)
 
     f, err := os.OpenFile(filePath, os.O_RDONLY,  0644)
     if err != nil {
@@ -50,9 +51,16 @@ func (ms *MovieStreamingService) ParseTorrent(fileName string) error {
 	if err != nil {
         return err
 	}
+    	
+    decodedByteArray, err := hex.DecodeString(torrent.Hash)
+    if err != nil {
+        return err
+    }
+    t.InfoHash = decodedByteArray
+    ts := NewTorrentStreaming("6881", t)
 
-	fmt.Println(">>>> torrent", t)
-    
-
+    ts.GetPeers(&CurrentState{ Downloaded: 0, Left:  t.CalculateLength()})
     return nil
 } 
+
+
