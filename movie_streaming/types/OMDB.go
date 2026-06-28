@@ -12,6 +12,6 @@ type MovieOMDB struct {
 // MovieSearchResponse represents the top-level wrapper JSON object.
 type MovieSearchResponseOMDB struct {
 	Search       []MovieOMDB `json:"Search"`
-	TotalResults string  `json:"totalResults"`
-	Response     string  `json:"Response"` // Handled as a string since the value is "True"
+	TotalResults string      `json:"totalResults"`
+	Response     string      `json:"Response"` // Handled as a string since the value is "True"
 }
