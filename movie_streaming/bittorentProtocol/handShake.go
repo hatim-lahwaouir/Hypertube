@@ -1,5 +1,4 @@
-package types
-
+package bittorentProtocol 
 
 import (
     "bytes"

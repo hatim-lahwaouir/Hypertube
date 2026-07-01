@@ -1,7 +1,8 @@
-package types
+package bittorentProtocol 
 
 import (
 	"encoding/binary"
+    "bytes"
 	"time"
     "fmt"
     "strconv"
@@ -43,13 +44,13 @@ func NewPeers(resp []byte, n int) []Peer {
 
 
 func (p *Peer) Connect() {
-    conn , err := net.DialTimeout("tcp", p.IP.String() + ":" +  strconv.FormatUint(uint64(p.Port), 10), 1 * time.Second)
+    conn , err := net.DialTimeout("tcp", p.IP.String() + ":" +  strconv.FormatUint(uint64(p.Port), 10), 2 * time.Second)
     if err != nil {
         //fmt.Println(err)
         p.IsGood = false
         return
     }
-    if err := conn.SetDeadline(time.Now().Add(1 * time.Second)); err != nil {
+    if err := conn.SetDeadline(time.Now().Add(3 * time.Second)); err != nil {
 		fmt.Println("errror setting dead line  ", err.Error())
 		return 
 	}
@@ -60,10 +61,10 @@ func (p *Peer) Connect() {
 
 
 
-func (p *Peer) PeerHandShake(h HandShake) {
+func (p *Peer) PeerHandShake(h HandShake) []byte {
 
     if p.IsGood == false{
-        return
+        return nil
     }
     start := time.Now()
 
@@ -71,22 +72,52 @@ func (p *Peer) PeerHandShake(h HandShake) {
         
     rawBytes := h.Serialize()
     
-    p.Conn.SetWriteDeadline(time.Now().Add(time.Second * 1))
+    p.Conn.SetWriteDeadline(time.Now().Add(time.Second * 3))
     if _, err := p.Conn.Write(rawBytes); err != nil {
             fmt.Println("error sending data", err)
             p.IsGood  = false
-            return 
+            return nil
     }
     resp := make([]byte, 68)
 
 
-    p.Conn.SetReadDeadline(time.Now().Add(time.Second * 2))
+    p.Conn.SetReadDeadline(time.Now().Add(time.Second * 3))
     n , err := p.Conn.Read(resp)
     if err != nil {
             p.IsGood  = false
-            return 
+            return nil
     }
     fmt.Println("handshake ->", n, "in", start.Sub(time.Now()))
 
+    return  resp
+}
+
+func (p *Peer) ValidHandShake(h HandShake, peerResp []byte ) bool {
+
+    if p.IsGood == false{
+        return false
+    }
+    rawBytes := h.Serialize()
+
+
+    
+
+
+     // comapre hash info and pstr
+
+    if bytes.Equal(peerResp[28:len(peerResp) - 20], rawBytes[28:len(rawBytes) - 20]) == false  ||
+        bytes.Equal(rawBytes[0:20], peerResp[0:20]) == false {
+
+    
+        
+
+       p.IsGood  = false
+        return  false
+    }
+
+
+
+
+    return true
 }
 

@@ -6,7 +6,7 @@ import (
 	"compress/gzip"
 	"encoding/hex"
 	"github.com/hatim-lahwaouir/Hypertube/movie_streaming/models"
-	"github.com/hatim-lahwaouir/Hypertube/movie_streaming/types"
+	bittorent "github.com/hatim-lahwaouir/Hypertube/movie_streaming/bittorentProtocol"
 	"os"
 )
 
@@ -40,7 +40,7 @@ func (ms *MovieStreamingService) ParseTorrent(torrent *models.Torrent) error {
 	}
 	defer gzipReader.Close()
 
-	t, err := types.NewTorrent(gzipReader)
+	t, err := bittorent.NewTorrent(gzipReader)
 	if err != nil {
 		return err
 	}
@@ -51,7 +51,7 @@ func (ms *MovieStreamingService) ParseTorrent(torrent *models.Torrent) error {
 	}
 	t.InfoHash = decodedByteArray
 	ts := NewTorrentStreaming("6881", t)
-	ts.GetPeers()
+	ts.GetUdpPeers()
 	ts.HandShake()
 	return nil
 }

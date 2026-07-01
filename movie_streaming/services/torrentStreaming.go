@@ -1,8 +1,9 @@
 package services
 
 import (
+    "fmt"
 	"crypto/rand"
-	"github.com/hatim-lahwaouir/Hypertube/movie_streaming/types"
+	bittorent "github.com/hatim-lahwaouir/Hypertube/movie_streaming/bittorentProtocol"
     "sync"
 	"net/url"
 	"path/filepath"
@@ -22,27 +23,27 @@ type TorrentStreaming struct {
 	Size  []int64
 
 	HttpTrackers []string
-	UdpTrackers  []types.UdpTracker
+	UdpTrackers  []bittorent.UdpTracker
 
 	Downloaded int64
 	Left       int64
-    Peers      []types.Peer
+    Peers      []bittorent.Peer
 }
 
-func (t *TorrentStreaming) GetState() *types.CurrentState {
+func (t *TorrentStreaming) GetState() *bittorent.CurrentState {
 
-	return &types.CurrentState{Downloaded: t.Downloaded, Left: t.Left, Port: t.Port, PeerId: t.PeerId, InfoHash: t.InfoHash}
+	return &bittorent.CurrentState{Downloaded: t.Downloaded, Left: t.Left, Port: t.Port, PeerId: t.PeerId, InfoHash: t.InfoHash}
 
 }
 
-func NewTorrentStreaming(p string, t *types.TorrentFile) *TorrentStreaming {
+func NewTorrentStreaming(p string, t *bittorent.TorrentFile) *TorrentStreaming {
 
 	var (
 		files        []string
 		size         []int64
 		pieces       [][20]byte
 		httpTrackers []string
-		udpTrackers  []types.UdpTracker
+		udpTrackers  []bittorent.UdpTracker
 		peerId       [20]byte
 	)
 
@@ -68,7 +69,7 @@ func NewTorrentStreaming(p string, t *types.TorrentFile) *TorrentStreaming {
 		httpTrackers = append(httpTrackers, t.Announce)
 	} else {
 
-		udpTrackers = append(udpTrackers, types.NewUdpTracker(t.Announce))
+		udpTrackers = append(udpTrackers, bittorent.NewUdpTracker(t.Announce))
 	}
 
 	for _, values := range t.AnnounceList {
@@ -79,7 +80,7 @@ func NewTorrentStreaming(p string, t *types.TorrentFile) *TorrentStreaming {
 				httpTrackers = append(httpTrackers, val)
 			} else {
 
-				udpTrackers = append(udpTrackers, types.NewUdpTracker(val))
+				udpTrackers = append(udpTrackers, bittorent.NewUdpTracker(val))
 			}
 		}
 	}
@@ -93,16 +94,39 @@ func NewTorrentStreaming(p string, t *types.TorrentFile) *TorrentStreaming {
 		Size: size, Files: files, UdpTrackers: udpTrackers, HttpTrackers: httpTrackers, Left: t.CalculateLength(), Downloaded: 0}
 }
 
-func (t *TorrentStreaming) GetPeers(){
 
+
+func GetUdpPeersWorker(recv chan bittorent.UdpTracker, res chan []bittorent.Peer,  cur *bittorent.CurrentState ,wg *sync.WaitGroup) {
+   
+
+   defer wg.Done()
+
+   for  tr := range(recv) {
+        tr.GetConnectionId()
+        p := tr.GetPeers(cur)
+        res <- p
+   }
+}
+
+
+
+func (t *TorrentStreaming) StorePeersFromUdpTracker(res chan []bittorent.Peer, wg *sync.WaitGroup){
     var (
-        peers []types.Peer
-
+        peers []bittorent.Peer
     )
+    defer wg.Done()
+    
 
-	// using http trackers
+    for p := range(res) {
+        peers = append(peers, p...)
+    }
+    t.Peers = peers
+}
+
+
+func (t *TorrentStreaming) GetHttpPeers(){
+
 	cur := t.GetState()
-
 	for _, u := range t.HttpTrackers {
 
 		base, _ := url.Parse(u)
@@ -118,21 +142,49 @@ func (t *TorrentStreaming) GetPeers(){
 		}
 		base.RawQuery = params.Encode()
 	}
-
-	for _, u := range t.UdpTrackers {
-       
-		u.GetConnectionId()
-        p := u.GetPeers(cur)
-
-        if p != nil {
-		    peers = append(peers, p...)
-        }
-	}
-    t.Peers = peers
+    
 }
 
 
-func TryHandShake(h types.HandShake, recv chan types.Peer, res chan types.Peer,wg *sync.WaitGroup) {
+
+func (t *TorrentStreaming) GetUdpPeers(){
+
+    var (
+
+        waitGetUdpPeers sync.WaitGroup
+        waitWorkersUdpPeers sync.WaitGroup
+        peerRes chan []bittorent.Peer
+        recv chan bittorent.UdpTracker
+        n_gorotines int
+    )
+    n_gorotines = 20
+
+
+    recv = make(chan bittorent.UdpTracker, 50)
+    peerRes = make(chan []bittorent.Peer, 100)
+
+	// using http trackers
+	cur := t.GetState()
+
+    // udp
+    for i := 0; i < n_gorotines; i += 1 {
+        waitWorkersUdpPeers.Add(1)
+        go GetUdpPeersWorker(recv, peerRes,cur , &waitWorkersUdpPeers)
+    }
+    waitGetUdpPeers.Add(1)
+    go t.StorePeersFromUdpTracker(peerRes, &waitGetUdpPeers)
+	for _, u := range t.UdpTrackers {
+        recv <- u
+	}
+    close(recv)
+    waitWorkersUdpPeers.Wait()
+    close(peerRes)
+
+    waitGetUdpPeers.Wait()
+}
+
+
+func TryHandShake(h bittorent.HandShake, recv chan  bittorent.Peer, res chan bittorent.Peer,wg *sync.WaitGroup) {
 
     defer wg.Done()
     for p := range(recv) {
@@ -140,42 +192,65 @@ func TryHandShake(h types.HandShake, recv chan types.Peer, res chan types.Peer,w
         if p.IsGood == false{
             continue
         }
-        p.PeerHandShake(h)
+        resp := p.PeerHandShake(h)
         if p.IsGood == false{
             continue
         }
+        if p.ValidHandShake(h, resp) == false {
+            continue
+        }
+
+        fmt.Println("-- handshake --")
+        fmt.Println("new peer handshake good ", p)
         res <- p
     }
 }
 
 
-func (t *TorrentStreaming) HandShake(){
-    //PeerId      [20]byte
-	//InfoHash    [20]byte
+func (t *TorrentStreaming) GetGoodPeers(res chan  bittorent.Peer, wg *sync.WaitGroup){
+    defer wg.Done()
     var (
-        //GoodPeers []types.Peer
-        res    chan types.Peer
-        recv    chan types.Peer
-        wg sync.WaitGroup
+        newPeers  []bittorent.Peer
+    )
+
+    for p := range(res) {
+        newPeers = append(newPeers,p)
+    }
+    t.Peers = newPeers
+}
+
+func (t *TorrentStreaming) HandShake(){
+    var (
+        //GoodPeers []bitt.Peer
+        res    chan bittorent.Peer
+        recv    chan bittorent.Peer
+        waitWorkers sync.WaitGroup
+        waitGoodPeers sync.WaitGroup
         n_gorotines int
 
     )
+    n_gorotines = 50
 
-    n_gorotines = 100
-
-
-    h := types.NewHandShake(t.PeerId, t.InfoHash)
-    res = make(chan types.Peer, 100)
-    recv = make(chan types.Peer, 100)
+    h := bittorent.NewHandShake(t.PeerId, t.InfoHash)
+    res = make(chan bittorent.Peer, 300)
+    recv = make(chan bittorent.Peer, 300)
 
     for i := 0; i <n_gorotines; i += 1 {
-        wg.Add(1)
-        go TryHandShake(*h, recv, res, &wg) 
+        waitWorkers.Add(1)
+        go TryHandShake(*h, recv, res, &waitWorkers) 
     }
-
+    waitGoodPeers.Add(1)
+    go t.GetGoodPeers(res, &waitGoodPeers)
+    
 
     for _, p := range(t.Peers) {
         recv <- p
     }
+
+
     close(recv)
+    waitWorkers.Wait()
+    close(res)
+    waitGoodPeers.Wait()
+    fmt.Println(len(t.Peers), "we got n peers ")
 }

@@ -1,4 +1,4 @@
-package types
+package bittorentProtocol 
 
 type CurrentState struct {
 	Downloaded int64

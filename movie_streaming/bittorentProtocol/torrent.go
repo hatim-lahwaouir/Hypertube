@@ -1,4 +1,4 @@
-package types
+package bittorentProtocol 
 
 import (
 	bencode "github.com/jackpal/bencode-go"

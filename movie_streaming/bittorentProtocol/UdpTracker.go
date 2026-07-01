@@ -1,4 +1,4 @@
-package types
+package bittorentProtocol 
 
 import (
 	"bytes"
@@ -39,7 +39,7 @@ func (u *UdpTracker) GetConnectionId() {
 		return
 	}
 	defer conn.Close()
-    if err := conn.SetDeadline(time.Now().Add(1 * time.Second)); err != nil {
+    if err := conn.SetDeadline(time.Now().Add(6 * time.Second)); err != nil {
 		fmt.Println("errror setting dead line  ", err.Error())
 		return 
 	}
@@ -120,7 +120,7 @@ func (u *UdpTracker) GetPeers(state *CurrentState) ([]Peer) {
 		fmt.Println("errror writing to the packet ", err.Error())
 		return nil
 	}
-	if err := conn.SetDeadline(time.Now().Add(1 * time.Second)); err != nil {
+	if err := conn.SetDeadline(time.Now().Add(6 * time.Second)); err != nil {
 		fmt.Println("errror setting dead line  ", err.Error())
 		return nil
 	}
