@@ -2,16 +2,19 @@ package services
 
 import (
 	"path/filepath"
-	//"fmt"
+    "fmt"
 	"compress/gzip"
 	"encoding/hex"
 	"github.com/hatim-lahwaouir/Hypertube/movie_streaming/models"
 	bittorent "github.com/hatim-lahwaouir/Hypertube/movie_streaming/bittorentProtocol"
 	"os"
+    "sync"
 )
 
 type MovieStreamingService struct {
 	TorrentPath string
+	Streams     map[[20]byte]*TorrentStreaming 
+    wg sync.WaitGroup
 }
 
 var cacheMovieStreaming *MovieStreamingService
@@ -20,6 +23,8 @@ func NewMovieStreamingService() *MovieStreamingService {
 	if cacheMovieStreaming == nil {
 		cacheMovieStreaming = &MovieStreamingService{
 			TorrentPath: os.Getenv("TORRENT_PATH"),
+            Streams: make(map[[20]byte]*TorrentStreaming),
+            
 		}
 	}
 	return cacheMovieStreaming
@@ -51,7 +56,18 @@ func (ms *MovieStreamingService) ParseTorrent(torrent *models.Torrent) error {
 	}
 	t.InfoHash = decodedByteArray
 	ts := NewTorrentStreaming("6881", t)
-	ts.GetUdpPeers()
-	ts.HandShake()
-	return nil
+
+    ms.wg.Add(1)
+    go  ts.MonitorPeers(&ms.wg)
+    ms.AddStream(ts)
+    fmt.Println(ms.Streams)
+    return nil
+}
+
+func (ms *MovieStreamingService) AddStream(stream *TorrentStreaming) {
+    _ , ok := ms.Streams[stream.InfoHash]
+
+    if !ok {
+        ms.Streams[stream.InfoHash] = stream
+    }
 }

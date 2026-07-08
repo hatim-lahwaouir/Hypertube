@@ -2,9 +2,12 @@ package bittorentProtocol
 
 import (
 	"encoding/binary"
+    "errors"
+    "os"
+    "sync"
     "bytes"
-	"time"
     "fmt"
+	"time"
     "strconv"
 	"net"
 )
@@ -13,7 +16,61 @@ type Peer struct {
 	IP   net.IP
 	Port uint16
     Conn  net.Conn
-    IsGood bool
+    BitField []byte
+    valid bool
+    UnChoke bool
+    PacketSent  int
+
+    InfoHash [20]byte
+    Mu      sync.Mutex
+    ClientId [20]byte
+}
+
+
+func (p *Peer) IsBad() {
+    p.Mu.Lock()
+    p.valid = false
+    p.Mu.Unlock()
+}
+
+
+func (p *Peer) IsGood() bool {
+    p.Mu.Lock()
+    res := p.valid
+    p.Mu.Unlock()
+
+    return res
+}
+ 
+func (p *Peer) Id() string {
+    return p.IP.String() + ":" +  strconv.FormatUint(uint64(p.Port), 10)
+
+}
+
+
+func (p *Peer) SetInfo(infoHash [20]byte, clientId [20]byte)  {
+    p.InfoHash = infoHash
+    p.ClientId = clientId 
+}
+
+
+func (p *Peer)HasPiece(index uint32) bool {
+    if p.BitField == nil{
+        return false
+    }
+    byteIndex := index / 8
+    offset := index % 8
+    return p.BitField[byteIndex]>>(7-offset)&1 != 0
+}
+
+
+func (p *Peer) SetPiece(index uint32) {
+
+    byteIndex := index / 8
+    offset := index % 8
+    if p != nil {
+        p.BitField[byteIndex] |= 1 << (7 - offset)
+    }
 }
 
 
@@ -46,78 +103,209 @@ func NewPeers(resp []byte, n int) []Peer {
 func (p *Peer) Connect() {
     conn , err := net.DialTimeout("tcp", p.IP.String() + ":" +  strconv.FormatUint(uint64(p.Port), 10), 2 * time.Second)
     if err != nil {
-        //fmt.Println(err)
-        p.IsGood = false
+        p.IsBad()
         return
     }
-    if err := conn.SetDeadline(time.Now().Add(3 * time.Second)); err != nil {
-		fmt.Println("errror setting dead line  ", err.Error())
-		return 
-	}
-
-    p.IsGood = true 
+    p.valid = true
     p.Conn = conn 
 }
 
 
 
-func (p *Peer) PeerHandShake(h HandShake) []byte {
+func (p *Peer) PeerHandShake(h *HandShake) []byte {
 
-    if p.IsGood == false{
+    if p.IsGood()== false{
         return nil
     }
-    start := time.Now()
 
 
         
     rawBytes := h.Serialize()
     
-    p.Conn.SetWriteDeadline(time.Now().Add(time.Second * 3))
+    p.Conn.SetWriteDeadline(time.Now().Add(time.Second * 15))
     if _, err := p.Conn.Write(rawBytes); err != nil {
-            fmt.Println("error sending data", err)
-            p.IsGood  = false
+            p.IsBad()
             return nil
     }
     resp := make([]byte, 68)
 
 
-    p.Conn.SetReadDeadline(time.Now().Add(time.Second * 3))
-    n , err := p.Conn.Read(resp)
+    p.Conn.SetReadDeadline(time.Now().Add(time.Second * 15))
+    _ , err := p.Conn.Read(resp)
     if err != nil {
-            p.IsGood  = false
+            p.IsBad()
             return nil
     }
-    fmt.Println("handshake ->", n, "in", start.Sub(time.Now()))
 
     return  resp
 }
 
-func (p *Peer) ValidHandShake(h HandShake, peerResp []byte ) bool {
+func (p *Peer) ValidHandShake(h *HandShake, peerResp []byte ) bool {
 
-    if p.IsGood == false{
+    if p.IsGood() == false{
         return false
     }
     rawBytes := h.Serialize()
-
-
-    
-
-
      // comapre hash info and pstr
-
     if bytes.Equal(peerResp[28:len(peerResp) - 20], rawBytes[28:len(rawBytes) - 20]) == false  ||
         bytes.Equal(rawBytes[0:20], peerResp[0:20]) == false {
-
-    
-        
-
-       p.IsGood  = false
+        p.IsBad()
         return  false
     }
 
 
 
-
     return true
+}
+
+func (p *Peer) GetMessage() (*Msg, error) {
+
+    if p.IsGood() == false{
+        return nil, nil 
+    }
+
+    p.Conn.SetDeadline(time.Now().Add(time.Second * 15))
+    m, err := NewMessage(p.Conn)
+    if err != nil {
+        if errors.Is(err, os.ErrDeadlineExceeded) {
+			return nil,nil
+		}
+        p.IsBad()
+        return nil,err
+    }
+    return m, nil
+}
+
+
+
+func (p *Peer) Intersted() (error) {
+    if p.IsGood() == false{
+        return nil 
+    }
+
+    p.Conn.SetWriteDeadline(time.Now().Add(time.Second * 15))
+    m := Msg{ID: MsgInterested}
+    data := m.Serialize()
+    if _, err := p.Conn.Write(data); err != nil {
+            p.IsBad() 
+            return  err
+    }
+    
+    return nil
+}
+
+func (p *Peer) Request(cur uint32 ,base uint32,length uint32) error {
+    if p.IsGood() == false || p.UnChoke == false {
+        return errors.New("invalid Peer") 
+    }
+    buf := make([]byte, 17)
+
+	binary.BigEndian.PutUint32(buf[0:4], 13)
+
+	buf[4] = byte(MsgRequest)
+
+	binary.BigEndian.PutUint32(buf[5:9],cur )
+
+	binary.BigEndian.PutUint32(buf[9:13], base)
+
+	binary.BigEndian.PutUint32(buf[13:17], length)
+
+    p.Conn.SetWriteDeadline(time.Now().Add(time.Second * 15))
+    if _, err := p.Conn.Write(buf); err != nil {
+            p.IsBad()
+            return   err
+    }
+    p.PacketSent++
+    return nil
+
+}
+
+func (p *Peer) PearGoRotine(wg *sync.WaitGroup)  {
+    defer wg.Done()
+    var (
+        other sync.WaitGroup
+    )
+    p.Connect() 
+    if p.IsGood() == false{
+        return
+    }
+    // first doing handshake with peer
+    handShake := NewHandShake(p.ClientId, p.InfoHash)
+    resp := p.PeerHandShake(handShake)
+
+    if resp == nil {
+        return
+    }
+    if p.ValidHandShake(handShake, resp) == false {
+        return 
+    }
+
+
+    // here we will start a gorotine for reading peer messages 
+    other.Add(1)
+    go  p.PeerMesgs(&other)
+    p.Intersted()
+
+
+    other.Wait()
+}
+
+func (p *Peer) PeerMesgs(wg *sync.WaitGroup)  {
+    defer wg.Done()
+    if p.IsGood() == false{
+        return
+    }
+    for ;; {
+        if p.IsGood() == false {
+            return 
+        }
+        m, err := p.GetMessage()
+        if err != nil {
+            p.IsBad()
+            return
+        }
+
+
+        if m == nil {
+            continue
+        }
+        switch m.ID {
+            case MsgChoke:
+                p.UnChoke = false
+            case MsgUnchoke:
+                p.UnChoke = true 
+            case MsgHave:
+                if index, ok := m.ParseHave(); ok {
+                    p.SetPiece(index)
+                }
+             case MsgBitfield :
+             fmt.Println(m.ID, len(m.Payload))
+                p.SetBitField(m.Payload)
+        }
+
+
+
+
+
+    }
+    // here we will be waiting for peer messages
+}
+
+
+
+func (p *Peer) SetBitField(bitfield []byte) {
+    if p.IsGood() == false{
+        return
+    }
+    p.BitField = make([]byte, len(bitfield))
+    copy(p.BitField, bitfield)
+}
+
+func (p *Peer) InitBitField(size int) {
+    if p.IsGood() == false{
+        return
+    }
+    p.BitField = make([]byte,size)
+    //copy(p.BitField, bitfield)
 }
 
