@@ -1,15 +1,15 @@
-package bittorentProtocol 
+package bittorentProtocol
 
 import (
+	"bytes"
 	"encoding/binary"
-    "errors"
-    "os"
-    "sync"
-    "bytes"
-    "fmt"
-	"time"
-    "strconv"
+	"errors"
+	"fmt"
 	"net"
+	"os"
+	"strconv"
+	"sync"
+	"time"
 )
 
 type Peer struct {
@@ -22,24 +22,26 @@ type Peer struct {
     PacketSent  int
 
     InfoHash [20]byte
-    Mu      sync.Mutex
-    ClientId [20]byte
+    Mu      sync.RWMutex
+    ClientID [20]byte
+
+    PieceWorkRecvChan chan *PieceWork
+    PieceWorkResChan chan *PieceWork
 }
 
 
-func (p *Peer) IsBad() {
+func (p *Peer) SetGood(b bool) {
     p.Mu.Lock()
-    p.valid = false
+    p.valid = b
     p.Mu.Unlock()
 }
 
 
 func (p *Peer) IsGood() bool {
-    p.Mu.Lock()
-    res := p.valid
-    p.Mu.Unlock()
-
-    return res
+    p.Mu.RLock()
+    
+    defer p.Mu.RUnlock()
+    return p.valid
 }
  
 func (p *Peer) Id() string {
@@ -48,9 +50,9 @@ func (p *Peer) Id() string {
 }
 
 
-func (p *Peer) SetInfo(infoHash [20]byte, clientId [20]byte)  {
+func (p *Peer) SetInfo(infoHash [20]byte, clientID [20]byte)  {
     p.InfoHash = infoHash
-    p.ClientId = clientId 
+    p.ClientID = clientID
 }
 
 
@@ -92,7 +94,8 @@ func NewPeers(resp []byte, n int) []Peer {
 		port := binary.BigEndian.Uint16(portBytes)
 		ip := net.IP(ipBytes)
 
-		peers = append(peers, Peer{IP: ip, Port: port})
+		peers = append(peers, Peer{IP: ip, Port: port,     PieceWorkRecvChan : make(chan *PieceWork, 5),
+        PieceWorkResChan : make(chan *PieceWork, 5),  valid: true, })
 	}
 
 	return peers
@@ -103,7 +106,7 @@ func NewPeers(resp []byte, n int) []Peer {
 func (p *Peer) Connect() {
     conn , err := net.DialTimeout("tcp", p.IP.String() + ":" +  strconv.FormatUint(uint64(p.Port), 10), 2 * time.Second)
     if err != nil {
-        p.IsBad()
+        p.SetGood(false)
         return
     }
     p.valid = true
@@ -114,7 +117,7 @@ func (p *Peer) Connect() {
 
 func (p *Peer) PeerHandShake(h *HandShake) []byte {
 
-    if p.IsGood()== false{
+    if !p.IsGood(){
         return nil
     }
 
@@ -124,7 +127,7 @@ func (p *Peer) PeerHandShake(h *HandShake) []byte {
     
     p.Conn.SetWriteDeadline(time.Now().Add(time.Second * 15))
     if _, err := p.Conn.Write(rawBytes); err != nil {
-            p.IsBad()
+            p.SetGood(false)
             return nil
     }
     resp := make([]byte, 68)
@@ -133,7 +136,7 @@ func (p *Peer) PeerHandShake(h *HandShake) []byte {
     p.Conn.SetReadDeadline(time.Now().Add(time.Second * 15))
     _ , err := p.Conn.Read(resp)
     if err != nil {
-            p.IsBad()
+            p.SetGood(false)
             return nil
     }
 
@@ -142,14 +145,14 @@ func (p *Peer) PeerHandShake(h *HandShake) []byte {
 
 func (p *Peer) ValidHandShake(h *HandShake, peerResp []byte ) bool {
 
-    if p.IsGood() == false{
+    if !p.IsGood(){
         return false
     }
     rawBytes := h.Serialize()
      // comapre hash info and pstr
-    if bytes.Equal(peerResp[28:len(peerResp) - 20], rawBytes[28:len(rawBytes) - 20]) == false  ||
-        bytes.Equal(rawBytes[0:20], peerResp[0:20]) == false {
-        p.IsBad()
+    if !bytes.Equal(peerResp[28:len(peerResp) - 20], rawBytes[28:len(rawBytes) - 20]) ||
+       ! bytes.Equal(rawBytes[0:20], peerResp[0:20])  {
+        p.SetGood(false)
         return  false
     }
 
@@ -160,7 +163,7 @@ func (p *Peer) ValidHandShake(h *HandShake, peerResp []byte ) bool {
 
 func (p *Peer) GetMessage() (*Msg, error) {
 
-    if p.IsGood() == false{
+    if !p.IsGood(){
         return nil, nil 
     }
 
@@ -170,7 +173,7 @@ func (p *Peer) GetMessage() (*Msg, error) {
         if errors.Is(err, os.ErrDeadlineExceeded) {
 			return nil,nil
 		}
-        p.IsBad()
+        p.SetGood(false)
         return nil,err
     }
     return m, nil
@@ -179,7 +182,7 @@ func (p *Peer) GetMessage() (*Msg, error) {
 
 
 func (p *Peer) Intersted() (error) {
-    if p.IsGood() == false{
+    if !p.IsGood(){
         return nil 
     }
 
@@ -187,7 +190,7 @@ func (p *Peer) Intersted() (error) {
     m := Msg{ID: MsgInterested}
     data := m.Serialize()
     if _, err := p.Conn.Write(data); err != nil {
-            p.IsBad() 
+            p.SetGood(false) 
             return  err
     }
     
@@ -195,7 +198,7 @@ func (p *Peer) Intersted() (error) {
 }
 
 func (p *Peer) Request(cur uint32 ,base uint32,length uint32) error {
-    if p.IsGood() == false || p.UnChoke == false {
+    if !p.IsGood() || !p.UnChoke {
         return errors.New("invalid Peer") 
     }
     buf := make([]byte, 17)
@@ -212,7 +215,7 @@ func (p *Peer) Request(cur uint32 ,base uint32,length uint32) error {
 
     p.Conn.SetWriteDeadline(time.Now().Add(time.Second * 15))
     if _, err := p.Conn.Write(buf); err != nil {
-            p.IsBad()
+            p.SetGood(false)
             return   err
     }
     p.PacketSent++
@@ -220,81 +223,99 @@ func (p *Peer) Request(cur uint32 ,base uint32,length uint32) error {
 
 }
 
-func (p *Peer) PearGoRotine(wg *sync.WaitGroup)  {
+func (p *Peer) PeerGoRotine(wg *sync.WaitGroup)  {
     defer wg.Done()
     var (
         other sync.WaitGroup
     )
+
     p.Connect() 
-    if p.IsGood() == false{
+    if !p.IsGood(){
         return
     }
     // first doing handshake with peer
-    handShake := NewHandShake(p.ClientId, p.InfoHash)
+    handShake := NewHandShake(p.ClientID, p.InfoHash)
     resp := p.PeerHandShake(handShake)
 
     if resp == nil {
         return
     }
-    if p.ValidHandShake(handShake, resp) == false {
+    if !p.ValidHandShake(handShake, resp) {
         return 
     }
 
 
     // here we will start a gorotine for reading peer messages 
     other.Add(1)
-    go  p.PeerMesgs(&other)
     p.Intersted()
 
+    go  p.PeerMesgs(&other)
 
+    fmt.Println(p.IsGood())
+    for piece := range(p.PieceWorkRecvChan){
+        fmt.Println("cur piece", piece)
+    }
     other.Wait()
 }
 
 func (p *Peer) PeerMesgs(wg *sync.WaitGroup)  {
     defer wg.Done()
-    if p.IsGood() == false{
+    if !p.IsGood(){
         return
     }
     for ;; {
-        if p.IsGood() == false {
+        if !p.IsGood() {
             return 
         }
         m, err := p.GetMessage()
         if err != nil {
-            p.IsBad()
+            p.SetGood(false)
             return
         }
-
 
         if m == nil {
             continue
         }
+        fmt.Println("message received from ", p.Id(), p.IsGood())
         switch m.ID {
             case MsgChoke:
                 p.UnChoke = false
             case MsgUnchoke:
+                fmt.Println("user Unchoke", p.Id())
                 p.UnChoke = true 
             case MsgHave:
                 if index, ok := m.ParseHave(); ok {
                     p.SetPiece(index)
                 }
-             case MsgBitfield :
-             fmt.Println(m.ID, len(m.Payload))
-                p.SetBitField(m.Payload)
+            case MsgBitfield :
+                if len(p.BitField) == len(m.Payload)  {
+                    p.SetBitField(m.Payload)
+                }
+            case MsgPiece:
+                // we receive a piece
+
         }
-
-
-
-
-
     }
     // here we will be waiting for peer messages
 }
 
 
+// Clear function to free all resources allocated 
+func (p *Peer) Clear() {
+    p.Mu.Lock()
+    p.valid = false
+    close(p.PieceWorkRecvChan)
+    close(p.PieceWorkResChan)
+    if p.Conn != nil {
+        p.Conn.Close()
+    }
+    p.Mu.Unlock()
+}
+
+
 
 func (p *Peer) SetBitField(bitfield []byte) {
-    if p.IsGood() == false{
+    if !p.IsGood(){
         return
     }
     p.BitField = make([]byte, len(bitfield))
@@ -302,9 +323,7 @@ func (p *Peer) SetBitField(bitfield []byte) {
 }
 
 func (p *Peer) InitBitField(size int) {
-    if p.IsGood() == false{
-        return
-    }
+
     p.BitField = make([]byte,size)
     //copy(p.BitField, bitfield)
 }

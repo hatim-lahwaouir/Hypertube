@@ -1,14 +1,16 @@
 package services
 
 import (
-    "fmt"
 	"crypto/rand"
-	bittorent "github.com/hatim-lahwaouir/Hypertube/movie_streaming/bittorentProtocol"
-    "sync"
+	"fmt"
 	"net/url"
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
+	"time"
+
+	bittorent "github.com/hatim-lahwaouir/Hypertube/movie_streaming/bittorentProtocol"
 )
 
 type TorrentStreaming struct {
@@ -29,6 +31,7 @@ type TorrentStreaming struct {
 	Downloaded int64
 	Left       int64
     Peers      map[string]*bittorent.Peer
+	NPiece     uint32
 }
 
 func (t *TorrentStreaming) GetState() *bittorent.CurrentState {
@@ -36,74 +39,67 @@ func (t *TorrentStreaming) GetState() *bittorent.CurrentState {
 	return &bittorent.CurrentState{Downloaded: t.Downloaded, Left: t.Left, Port: t.Port, PeerId: t.PeerId, InfoHash: t.InfoHash}
 }
 
-func (t *TorrentStreaming) DownloadAPiece(cur uint32)  error {
-    // iterate over all the peers
-    // ask them for the block of this piece
 
-    // we need something to parse the reponse and also to check if this block of piece already exists
-
-
-    var (
-     //   piece_length uint32
-        blockSize uint32
-        base uint32
-        //n_block uint32
-      //  downloaded uint32
-    )
-    //downloaded =  0
-    //piece_length = uint32(t.PieceLength)
-    blockSize = 16384
-    base = 16384
-    maxPacketsToSend := 5 
-
-    
-        //n_block = (pice_length + (blockSize - 1))  / blockSize
-
-
-        //for downloaded < piece_length{
-            for _, val := range(t.Peers){ 
-                if val.UnChoke {
-                        fmt.Println("good peer")
-                }
-                if val.UnChoke == false || val.IsGood() == false ||   val.PacketSent >= maxPacketsToSend {
-                    continue
-                }
-                if err := val.Request(cur, base,blockSize); err != nil {
-                        fmt.Println("erroring sending piece request , ", err.Error())
-
-                }
-
-            }
-            base += blockSize
-       // }
-
-    return nil
+func (t *TorrentStreaming) DeleteAbandonedPeers(){
+		for _, p := range(t.Peers){
+			if !p.IsGood(){
+				p.Clear()
+				delete(t.Peers, p.Id())
+			}
+		}
 }
 
-
-
-// goal of this is to download the movie
+// MonitorPeers goal of this is to download the movie
 func (t *TorrentStreaming) MonitorPeers(wg *sync.WaitGroup){
 
     var (
+		// piece_send int
         PeerWg sync.WaitGroup
     )
       
-    defer wg.Done()
+	defer wg.Done()
     t.GetUdpPeers()
 
-    fmt.Println("--- start peer gorotoine--")
     for _, val := range(t.Peers){
         val.SetInfo(t.InfoHash, t.PeerId)
         val.InitBitField(int((((t.Length + (t.PieceLength - 1)) / t.PieceLength) + 7) / 8))
         PeerWg.Add(1)
-        go val.PearGoRotine(&PeerWg)
+        go val.PeerGoRotine(&PeerWg)
     }
-    
 
 
+	t.DeleteAbandonedPeers()
+	// here we need to start send piece work to peers
+	for ;; {
+		// piece_send =0 
 
 
+		time.Sleep(3 * time.Second)
+
+		fmt.Println("--- good peers --- ")
+		for _, p := range(t.Peers){
+			if p.IsGood(){
+				fmt.Println(p.Id())
+			}
+		}
+
+		fmt.Println("--- all Peers --- ")
+		for _, p := range(t.Peers){
+				fmt.Println(p.Id())
+		}
+		// for _, p := range(t.Peers){
+		// 	fmt.Println(p.IsGood(), p.Id())
+		// 	if p.IsGood(){	
+		// 		piece_send += 1
+		// 		p.PieceWorkRecvChan <- bittorent.NewPieceWork(curPiece, uint32(t.PieceLength))
+		// 	}
+		// }
+		t.DeleteAbandonedPeers()
+		// if piece_send == 0 {
+			// curPiece--
+			// continue
+		// }
+		} 
     PeerWg.Wait()
 }
 
@@ -174,7 +170,9 @@ func NewTorrentStreaming(p string, t *bittorent.TorrentFile) *TorrentStreaming {
     
 	portUint64, _ := strconv.ParseUint(p, 10, 16)
 	return &TorrentStreaming{PeerId: peerId, InfoHash: [20]byte(t.InfoHash), Port: uint16(portUint64), Length: t.CalculateLength(),
-		Size: size, Files: files, UdpTrackers: udpTrackers, HttpTrackers: httpTrackers, Left: t.CalculateLength(), Downloaded: 0, PieceLength : t.Info.PieceLength, Bitfield: bitfield, Peers : make(map[string]*bittorent.Peer)}
+		Size: size, Files: files, UdpTrackers: udpTrackers, HttpTrackers: httpTrackers, Left: t.CalculateLength(), Downloaded: 0, PieceLength : t.Info.PieceLength, 
+		Bitfield: bitfield, Peers : make(map[string]*bittorent.Peer),
+		NPiece: uint32(n_piece)}
 }
 
 
