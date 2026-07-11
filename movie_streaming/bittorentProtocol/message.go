@@ -59,6 +59,26 @@ func (m *Msg) ParseHave() (uint32, bool) {
     return pieceIndex,true 
 }
 
+
+
+func (m *Msg) ParsePiece() (uint32, uint32, []byte, bool) {
+
+    if (len(m.Payload) < 8){
+        return 0,0,nil, false
+    }
+
+    pieceIndex := binary.BigEndian.Uint32(m.Payload[0:4])
+    begin := binary.BigEndian.Uint32(m.Payload[4:8])
+    buf := m.Payload[8:]
+    
+    
+    return pieceIndex, begin, buf, true
+}
+
+
+
+
+
 func NewMessage(r io.Reader) (*Msg, error) {
     buf := make([]byte, 4)
 
@@ -87,3 +107,6 @@ func NewMessage(r io.Reader) (*Msg, error) {
 
     return &m,nil
 }
+
+
+

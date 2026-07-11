@@ -23,12 +23,46 @@ type Peer struct {
 
     InfoHash [20]byte
     Mu      sync.RWMutex
+    MuSentMessages      sync.RWMutex
+    MessagesSent  int
     ClientID [20]byte
 
     PieceWorkRecvChan chan *PieceWork
     PieceWorkResChan chan *PieceWork
+
+
+    CurPiece *PieceWork
 }
 
+
+func (p *Peer)SentMessage(){
+    p.MuSentMessages.Lock()
+    p.MessagesSent += 1
+    p.MuSentMessages.Unlock()
+}
+
+func (p *Peer) ReceivedMessage(){
+    p.MuSentMessages.Lock()
+    p.MessagesSent -= 1
+    if p.MessagesSent < 0{
+        p.MessagesSent = 0
+    }
+    p.MuSentMessages.Unlock()
+}
+
+
+func (p *Peer) CanReceivedMessage() bool {
+    p.MuSentMessages.Lock()
+    defer p.MuSentMessages.Unlock()
+    
+    return p.MessagesSent < 5
+}
+
+func (p *Peer) GetMessageSent () int {
+    p.MuSentMessages.Lock()
+    defer p.MuSentMessages.Unlock()
+    return p.MessagesSent
+}
 
 func (p *Peer) SetGood(b bool) {
     p.Mu.Lock()
@@ -253,7 +287,29 @@ func (p *Peer) PeerGoRotine(wg *sync.WaitGroup)  {
 
     fmt.Println(p.IsGood())
     for piece := range(p.PieceWorkRecvChan){
-        fmt.Println("cur piece", piece)
+        piecesChan := make(chan uint32, piece.NPiece + 1)
+
+        for begin := uint32(0); begin < piece.Size; begin += piece.BlockSize {
+            piecesChan <- begin
+        }
+
+        p.CurPiece = piece
+        for !piece.Done(){
+            for begin := range(piecesChan) {
+                if piece.IsThisDone(begin){
+                    if piece.Done() {
+                        break
+                    }
+                    continue
+                }
+                length := begin + piece.BlockSize
+                if  length > piece.Size{
+                    length = piece.Size - begin 
+                }
+                p.Request(piece.Index, begin, length)
+                p.SentMessage()
+            } 
+        }
     }
     other.Wait()
 }
@@ -276,7 +332,8 @@ func (p *Peer) PeerMesgs(wg *sync.WaitGroup)  {
         if m == nil {
             continue
         }
-        fmt.Println("message received from ", p.Id(), p.IsGood())
+        // fmt.Println("message received from ", p.Id(), p.IsGood())
+        p.ReceivedMessage()
         switch m.ID {
             case MsgChoke:
                 p.UnChoke = false

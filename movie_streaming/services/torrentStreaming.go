@@ -76,9 +76,12 @@ func (t *TorrentStreaming) MonitorPeers(wg *sync.WaitGroup){
 
 		time.Sleep(3 * time.Second)
 
+		curPiece := uint32(0)
 		fmt.Println("--- good peers --- ")
 		for _, p := range(t.Peers){
 			if p.IsGood(){
+				piece := bittorent.NewPieceWork(curPiece, uint32(t.PieceLength), uint32(t.Length), t.Pieces[curPiece])
+				p.PieceWorkRecvChan <- piece
 				fmt.Println(p.Id())
 			}
 		}
