@@ -5,6 +5,8 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
+
+	// "fmt"
 	"net"
 	"os"
 	"strconv"
@@ -23,12 +25,13 @@ type Peer struct {
 
     InfoHash [20]byte
     Mu      sync.RWMutex
-    MuSentMessages      sync.RWMutex
+    PeerMutex      sync.Mutex
     MessagesSent  int
     ClientID [20]byte
 
     PieceWorkRecvChan chan *PieceWork
     PieceWorkResChan chan *PieceWork
+    Started bool
 
 
     CurPiece *PieceWork
@@ -36,31 +39,31 @@ type Peer struct {
 
 
 func (p *Peer)SentMessage(){
-    p.MuSentMessages.Lock()
+    p.PeerMutex.Lock()
     p.MessagesSent += 1
-    p.MuSentMessages.Unlock()
+    p.PeerMutex.Unlock()
 }
 
 func (p *Peer) ReceivedMessage(){
-    p.MuSentMessages.Lock()
+    p.PeerMutex.Lock()
     p.MessagesSent -= 1
     if p.MessagesSent < 0{
         p.MessagesSent = 0
     }
-    p.MuSentMessages.Unlock()
+    p.PeerMutex.Unlock()
 }
 
 
-func (p *Peer) CanReceivedMessage() bool {
-    p.MuSentMessages.Lock()
-    defer p.MuSentMessages.Unlock()
+func (p *Peer) CanSendMessage() bool {
+    p.PeerMutex.Lock()
+    defer p.PeerMutex.Unlock()
     
-    return p.MessagesSent < 5
+    return p.MessagesSent < 4
 }
 
 func (p *Peer) GetMessageSent () int {
-    p.MuSentMessages.Lock()
-    defer p.MuSentMessages.Unlock()
+    p.PeerMutex.Lock()
+    defer p.PeerMutex.Unlock()
     return p.MessagesSent
 }
 
@@ -91,6 +94,8 @@ func (p *Peer) SetInfo(infoHash [20]byte, clientID [20]byte)  {
 
 
 func (p *Peer)HasPiece(index uint32) bool {
+      p.PeerMutex.Lock()
+    defer p.PeerMutex.Unlock()
     if p.BitField == nil{
         return false
     }
@@ -101,7 +106,8 @@ func (p *Peer)HasPiece(index uint32) bool {
 
 
 func (p *Peer) SetPiece(index uint32) {
-
+    p.PeerMutex.Lock()
+    defer p.PeerMutex.Unlock()
     byteIndex := index / 8
     offset := index % 8
     if p != nil {
@@ -278,14 +284,13 @@ func (p *Peer) PeerGoRotine(wg *sync.WaitGroup)  {
         return 
     }
 
-
+    fmt.Println("hello", p.Id())
     // here we will start a gorotine for reading peer messages 
     other.Add(1)
     p.Intersted()
 
     go  p.PeerMesgs(&other)
 
-    fmt.Println(p.IsGood())
     for piece := range(p.PieceWorkRecvChan){
         piecesChan := make(chan uint32, piece.NPiece + 1)
 
@@ -293,7 +298,12 @@ func (p *Peer) PeerGoRotine(wg *sync.WaitGroup)  {
             piecesChan <- begin
         }
 
+        p.PeerMutex.Lock()
         p.CurPiece = piece
+        p.PeerMutex.Unlock()
+
+
+
         for !piece.Done(){
             for begin := range(piecesChan) {
                 if piece.IsThisDone(begin){
@@ -302,17 +312,45 @@ func (p *Peer) PeerGoRotine(wg *sync.WaitGroup)  {
                     }
                     continue
                 }
-                length := begin + piece.BlockSize
-                if  length > piece.Size{
+                if !p.PeerIsChoking() || !p.CanSendMessage() || !p.HasPiece(piece.Index) {
+                    piecesChan <- begin
+                    time.Sleep(100 * time.Millisecond)
+                    continue
+                }
+
+                length := piece.BlockSize
+                if begin + length > piece.Size {
                     length = piece.Size - begin 
                 }
+                // fmt.Println("Requeest for piece  " ,piece.Index, begin / piece.BlockSize, "was sent to ", p.Id())
                 p.Request(piece.Index, begin, length)
                 p.SentMessage()
+            
+                if piece.Done() {
+                        break
+                }
             } 
         }
     }
     other.Wait()
 }
+
+func (p *Peer) PeerChokingState(state bool){
+
+    p.PeerMutex.Lock()
+    defer p.PeerMutex.Unlock()
+
+    p.UnChoke = state
+}
+
+func (p *Peer) PeerIsChoking() bool{
+
+    p.PeerMutex.Lock()
+    defer p.PeerMutex.Unlock()
+
+    return p.UnChoke
+}
+
 
 func (p *Peer) PeerMesgs(wg *sync.WaitGroup)  {
     defer wg.Done()
@@ -332,14 +370,11 @@ func (p *Peer) PeerMesgs(wg *sync.WaitGroup)  {
         if m == nil {
             continue
         }
-        // fmt.Println("message received from ", p.Id(), p.IsGood())
-        p.ReceivedMessage()
         switch m.ID {
             case MsgChoke:
-                p.UnChoke = false
+                p.PeerChokingState(false)
             case MsgUnchoke:
-                fmt.Println("user Unchoke", p.Id())
-                p.UnChoke = true 
+                p.PeerChokingState(true)
             case MsgHave:
                 if index, ok := m.ParseHave(); ok {
                     p.SetPiece(index)
@@ -349,8 +384,17 @@ func (p *Peer) PeerMesgs(wg *sync.WaitGroup)  {
                     p.SetBitField(m.Payload)
                 }
             case MsgPiece:
-                // we receive a piece
-
+                p.ReceivedMessage()
+                index, begin, buf, ok := m.ParsePiece()
+                // fmt.Println("Piece", index, "was received from ", p.Id())
+                if !ok{
+                    continue
+                }
+                p.PeerMutex.Lock()
+                if p.CurPiece != nil {
+                    p.CurPiece.SetPiece(index, buf, begin)
+                }
+                p.PeerMutex.Unlock()
         }
     }
     // here we will be waiting for peer messages
