@@ -70,7 +70,7 @@ func NewTorrentStreaming(p string, t *bittorent.TorrentFile) *TorrentStreaming {
 		t.AnnounceList = append(t.AnnounceList, []string{val})
 	}
 	for _, val := range t.Info.Files {
-		files = append(files, *bittorent.Newfile(filepath.Join(val.Path...), uint32(val.Length)))
+		files = append(files, *bittorent.Newfile(filepath.Join(val.Path...), uint32(val.Length),t.Info.PieceLength))
 	}
 
 	hashSize := 20
@@ -221,11 +221,10 @@ func (t *TorrentStreaming) MonitorPeers(wg *sync.WaitGroup){
 	defer wg.Done()
 	piecesToWrite = make(chan  bittorent.PieceWork, 20)
 
-    t.GetUdpPeers()
+    
 
 	go t.WritePicesIntoTheDisk(&PeerWg, piecesToWrite)
 
-	t.StartPeers(&PeerWg)
 
 	// clear connections 
 	// t.DeleteAbandonedPeers()
@@ -234,7 +233,8 @@ func (t *TorrentStreaming) MonitorPeers(wg *sync.WaitGroup){
 
 	windowPieces := 5
 	for curPiece := int64(0); uint32(curPiece) < (t.NPiece); curPiece += int64(windowPieces){
-
+		t.GetUdpPeers()
+		t.StartPeers(&PeerWg)
 		
 		
 		// if (curPiece + 1) % 3 == 0{
@@ -250,7 +250,7 @@ func (t *TorrentStreaming) MonitorPeers(wg *sync.WaitGroup){
 
 		for i := curPiece; i < curPiece + int64(windowPieces); i += 1{
 			fmt.Println("sending peice", i )
-			t.PieceWorkRecvChan <- bittorent.NewPieceWork(uint32(i), uint32(t.PieceLength), uint32(t.Length), t.Pieces[curPiece])
+			t.PieceWorkRecvChan <- bittorent.NewPieceWork(uint32(i), uint32(t.PieceLength), uint32(t.Length), t.Pieces[i])
 		}
 		// for _, p := range(t.Peers){
 		// 		if p.IsGood(){
@@ -265,19 +265,25 @@ func (t *TorrentStreaming) MonitorPeers(wg *sync.WaitGroup){
 			select{
 			case PieceRes := <- t.PieceWorkResChan:
 				fmt.Println(PieceRes.Index, "reciving piece")
-				 status := PieceRes.ValidateEntigrity()
-				if !status{
+
+				if !PieceRes.ValidateEntigrity(){
+					fmt.Println("entigirity failled")
 					t.PieceWorkRecvChan <- PieceRes
 				}else{
+					fmt.Println("entigirity succed")
 					piecesToWrite <- *PieceRes
 					n += 1
 				}
 			default:
 				// fmt.Println("nothing was recived")
+				fmt.Println("cur window",curPiece, curPiece + int64(windowPieces) ,"pieces done ", n , "/", windowPieces)
 				time.Sleep(time.Millisecond * 200)
 			}
 
 		}
+		time.Sleep(1 * time.Second)
+		fmt.Println("piece that are good", n)
+
 
 	// for !piece.Done() {
 	// 	// piece_send =0 

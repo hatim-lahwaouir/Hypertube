@@ -12,10 +12,11 @@ type File struct {
 	BytesWritten int64
 	FD           *os.File
 	created      bool
+	PieceSize    int64
 }
 
-func Newfile(filePath string, size uint32) *File {
-	return &File{FilePath: filePath, Size: int64(size), created: false}
+func Newfile(filePath string, size uint32, PieceSize int64) *File {
+	return &File{FilePath: filePath, Size: int64(size), created: false, PieceSize: PieceSize}
 }
 
 func (f *File) Create(path string) error {
@@ -57,9 +58,9 @@ func (f *File) IsCreated() bool {
 }
 
 func (f *File) WriteData(pieceIndex int, buf []byte) ([]byte, error) {
-	pieceSize := int64(16384)
 
-	offset := int64(pieceIndex) * pieceSize
+
+	offset := int64(pieceIndex) * (f.PieceSize)
 
 	var overflow []byte
 	toWrite := int64(len(buf))

@@ -55,7 +55,7 @@ func (p *PieceWork) Done() bool {
 func (p *PieceWork) PrintState() {
 	p.Mu.Lock()
 	defer p.Mu.Unlock()
-	fmt.Println("piece ", p.Index, (float64(p.Downloaded)*100)/float64(p.Size), "%", "[", p.Downloaded, "|", p.Size, "]")
+	fmt.Printf("piece %d [%.2f%%/100%%]\n", p.Index, (float64(p.Downloaded)*100)/float64(p.Size))
 }
 
 func (p *PieceWork) PieceDone(pieceSize uint32) {
@@ -99,10 +99,16 @@ func (p *PieceWork) SetPiece(indexOfPice uint32, buf []byte, begin uint32) {
 	p.Downloaded += uint32(len(buf))
 }
 
+
 func (p *PieceWork) ValidateEntigrity() bool {
 	hash := sha1.New()
 	hash.Write(p.Buffer)
 	hashedData := hash.Sum(nil)
 
 	return bytes.Equal(hashedData, p.sha1[:])
+}
+
+
+func (p *PieceWork) GetDownloaded() uint32 {
+	return p.Downloaded
 }

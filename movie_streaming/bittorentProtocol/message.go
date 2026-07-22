@@ -27,6 +27,13 @@ type Msg struct {
 	Payload []byte
 }
 
+
+func HaveMsg(index uint32) []byte{
+
+
+	return nil
+}
+
 func (m *Msg) Serialize() []byte {
 	var (
 		length uint32
@@ -50,6 +57,10 @@ func (m *Msg) ParseHave() (uint32, bool) {
 	pieceIndex := binary.BigEndian.Uint32(m.Payload)
 	return pieceIndex, true
 }
+
+
+
+
 
 func (m *Msg) ParsePiece() (uint32, uint32, []byte, bool) {
 

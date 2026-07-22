@@ -60,7 +60,7 @@ func (p *Peer) CanSendMessage() bool {
 	p.PeerMutex.Lock()
 	defer p.PeerMutex.Unlock()
 
-	return p.MessagesSent < 4
+	return p.MessagesSent < 16
 }
 
 func (p *Peer) GetMessageSent() int {
@@ -248,6 +248,12 @@ func (p *Peer) Request(cur uint32, base uint32, length uint32) error {
 
 }
 
+func (p *Peer) SetCurrentPiece(piece *PieceWork){
+		p.PeerMutex.Lock()
+		p.CurPiece = piece
+		p.PeerMutex.Unlock()
+}
+
 func (p *Peer) PeerGoRotine(wg *sync.WaitGroup) {
 	defer wg.Done()
 	var (
@@ -287,17 +293,23 @@ func (p *Peer) PeerGoRotine(wg *sync.WaitGroup) {
 			piecesChan <- begin
 		}
 
-		p.PeerMutex.Lock()
-		p.CurPiece = piece
-		p.PeerMutex.Unlock()
+		p.SetCurrentPiece(piece)
 
-		for !piece.Done() {
+		good := true
+		limit := time.Now().Add(5 * time.Second)
+		lastDownload := piece.GetDownloaded()
+		for !piece.Done() && good {
+			
 			select {
 			case begin := <-piecesChan:
 				if piece.IsThisDone(begin) {
 					continue
 				}
-				if !p.PeerIsChoking() || !p.CanSendMessage() {
+				if !p.PeerIsChoking(){
+					good = false
+					break
+				}
+				if !p.CanSendMessage() {
 					piecesChan <- begin
 					time.Sleep(100 * time.Millisecond)
 					continue
@@ -307,23 +319,36 @@ func (p *Peer) PeerGoRotine(wg *sync.WaitGroup) {
 				if begin+length > piece.Size {
 					length = piece.Size - begin
 				}
-				// piece.PrintState()
 				// fmt.Println("Requeest for piece  " ,piece.Index, begin / piece.BlockSize, "was sent to ", p.Id())
 				p.Request(piece.Index, begin, length)
 				p.SentMessage()
 				piece.PrintState()
-
 			default:
-				time.Sleep(50 * time.Millisecond)
+				if time.Until(limit) < 0 {
+					if lastDownload == piece.GetDownloaded(){
+						good = false
+						break
+					}else{
+						limit = time.Now().Add(5 * time.Second)
+						lastDownload = piece.GetDownloaded()
+					}
+				}
+				piece.PrintState()
+				time.Sleep(300 * time.Millisecond)
 			}
 		}
 		fmt.Println(">>>>>>>>piece is done", piece.Index)
 		if piece.Done() {
 			p.PieceWorkResChan <- piece
 		} else {
+			p.SetCurrentPiece(nil)
+			close(piecesChan)
+			fmt.Println("peer time outed", p.Id())
+			p.Clear()
 			p.PieceWorkRecvChan <- piece
+			return
 		}
-
+		p.SetCurrentPiece(nil)
 	}
 
 	other.Wait()
@@ -383,11 +408,9 @@ func (p *Peer) PeerMesgs(wg *sync.WaitGroup) {
 			if !ok {
 				continue
 			}
-			p.PeerMutex.Lock()
 			if p.CurPiece != nil {
 				p.CurPiece.SetPiece(index, buf, begin)
 			}
-			p.PeerMutex.Unlock()
 		case MsgRequest:
 			//
 		}
@@ -395,12 +418,19 @@ func (p *Peer) PeerMesgs(wg *sync.WaitGroup) {
 	// here we will be waiting for peer messages
 }
 
+
+func (p *Peer) Have(pieceIndex uint32 ) {
+
+
+}
+
+
 // Clear function to free all resources allocated
 func (p *Peer) Clear() {
 	p.Mu.Lock()
 	p.valid = false
-	close(p.PieceWorkRecvChan)
-	close(p.PieceWorkResChan)
+	// close(p.PieceWorkRecvChan)
+	// close(p.PieceWorkResChan)
 	if p.Conn != nil {
 		p.Conn.Close()
 	}
