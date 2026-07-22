@@ -1,48 +1,50 @@
 package bittorentProtocol
 
 import (
-
-"os"
+	"fmt"
+	"os"
 	"path/filepath"
 )
 
-
-
-
 type File struct {
-	FilePath string
-	Size  int64
+	FilePath     string
+	Size         int64
 	BytesWritten int64
-	FD    *os.File
-	created bool
+	FD           *os.File
+	created      bool
 }
 
-
-func Newfile(filePath string, size uint32) *File{
+func Newfile(filePath string, size uint32) *File {
 	return &File{FilePath: filePath, Size: int64(size), created: false}
 }
 
 func (f *File) Create(path string) error {
-	fd, err := os.OpenFile(filepath.Join(path, f.FilePath), os.O_RDWR|os.O_CREATE, 0644)	
+	// make sure fiest that all sub directories of the file are downloaded
+	filePath := filepath.Join(path, f.FilePath)
+	dirPath := filepath.Dir(filePath)
+	fmt.Println(">>>>>>>>>>>>>>>>", dirPath)
+	err := os.MkdirAll(dirPath, 0755)
 	if err != nil {
 		return err
 	}
-	
-	
-	if err = fd.Truncate(f.Size); err != nil {	
-		fd.Close()
+
+	fd, err := os.OpenFile(filePath, os.O_RDWR|os.O_CREATE, 0644)
+	if err != nil {
 		return err
 	}
 
+	if err = fd.Truncate(f.Size); err != nil {
+		fd.Close()
+		return err
+	}
 
 	f.FD = fd
 	f.created = true
 	return nil
 }
 
-
-func (f * File) Done() bool {
-	done:=  f.BytesWritten >= f.Size
+func (f *File) Done() bool {
+	done := f.BytesWritten >= f.Size
 
 	if done {
 		f.FD.Close()
@@ -50,39 +52,29 @@ func (f * File) Done() bool {
 	return done
 }
 
-
-func (f * File) IsCreated() bool {
+func (f *File) IsCreated() bool {
 	return f.created
 }
 
+func (f *File) WriteData(pieceIndex int, buf []byte) ([]byte, error) {
+	pieceSize := int64(16384)
 
-func (f *File) WriteData(buf []byte) ([]byte, error) {
-	toWrite:= int64(len(buf))
-	var (
-		overflow []byte
-	)
+	offset := int64(pieceIndex) * pieceSize
 
-	overflow = nil
+	var overflow []byte
+	toWrite := int64(len(buf))
 
-	if len(buf) + int(f.BytesWritten) > int(f.Size){
-		toWrite = f.Size - f.BytesWritten
+	if offset+toWrite > int64(f.Size) {
+		toWrite = int64(f.Size) - offset
 		overflow = buf[toWrite:]
-	} 
+	}
 
-	n, err := f.FD.WriteAt(buf, f.BytesWritten)
+	_, err := f.FD.WriteAt(buf[:toWrite], offset)
 	if err != nil {
 		return overflow, err
 	}
-	
-	f.BytesWritten += int64(n)
 
+	f.BytesWritten += toWrite
 
 	return overflow, nil
 }
-
-
-
-
-
-
-

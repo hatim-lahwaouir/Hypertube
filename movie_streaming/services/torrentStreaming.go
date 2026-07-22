@@ -7,10 +7,11 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
-	"github.com/google/uuid"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/google/uuid"
 
 	bittorent "github.com/hatim-lahwaouir/Hypertube/movie_streaming/bittorentProtocol"
 )
@@ -34,158 +35,10 @@ type TorrentStreaming struct {
     Peers      map[string]*bittorent.Peer
 	NPiece     uint32
 	MoviePath  string
+
+	PieceWorkRecvChan  chan *bittorent.PieceWork
+	PieceWorkResChan chan *bittorent.PieceWork
 }
-
-func (t *TorrentStreaming) GetState() *bittorent.CurrentState {
-
-	return &bittorent.CurrentState{Downloaded: t.Downloaded, Left: t.Left, Port: t.Port, PeerId: t.PeerId, InfoHash: t.InfoHash}
-}
-
-
-func (t *TorrentStreaming) DeleteAbandonedPeers(){
-		for _, p := range(t.Peers){
-			if !p.IsGood(){
-				p.Clear()
-				delete(t.Peers, p.Id())
-			}
-		}
-}
-
-
-func (t *TorrentStreaming) WritePicesIntoTheDisk(wg *sync.WaitGroup, pieces chan bittorent.PieceWork){
-	defer wg.Done()
-	curFile := 0
-
-	var (
-		data []byte
-	)
-	MovieDirectory := filepath.Join(t.MoviePath, fmt.Sprintf("%s-%d-movie", uuid.NewString(), time.Now().Unix()))
-	err := os.MkdirAll(MovieDirectory, 0755)
-	if err != nil {
-		fmt.Println("err", err)
-	}
-	
-	for piece := range(pieces){
-
-		if curFile >= len(t.Files){
-			fmt.Println("the whole torrent is downloaded ")
-			return
-		}
-		file := t.Files[curFile]
-
-		if !file.IsCreated(){
-			err := file.Create(MovieDirectory)
-			fmt.Println(">>>>creating file", err, MovieDirectory)
-		}
-
-		data = append(data, piece.Buffer...)
-
-
-		overlflow , err := file.WriteData(data)
-		if err == nil {
-			continue
-		}
-		if len(overlflow) != 0{
-			data = append(data, piece.Buffer...)
-		}
-		if file.Done(){
-			curFile += 1
-		}
-	}
-
-}
-
-
-func (t *TorrentStreaming) PrintPeers(){
-
-	fmt.Println("-- peers -- ")
-	for _, p := range(t.Peers){
-		fmt.Println(p.Id())
-	}
-}
-
-func (t *TorrentStreaming) StartPeers(wg *sync.WaitGroup){
-    
-	for _, val := range(t.Peers){
-		if val.Started {
-			continue
-		}
-		fmt.Println("starting peers", val.Id())
-		val.Started = true
-		val.SetInfo(t.InfoHash, t.PeerId)
-        val.InitBitField(int((((t.Length + (t.PieceLength - 1)) / t.PieceLength) + 7) / 8))
-        wg.Add(1)
-        go val.PeerGoRotine(wg)
-    }
-}
-// MonitorPeers goal of this is to download the movie
-func (t *TorrentStreaming) MonitorPeers(wg *sync.WaitGroup){
-
-    var (
-		// piece_send int
-        PeerWg sync.WaitGroup
-		piecesToWrite chan bittorent.PieceWork
-
-    )
-
-      
-	defer wg.Done()
-	piecesToWrite = make(chan  bittorent.PieceWork, 20)
-
-    t.GetUdpPeers()
-
-	go t.WritePicesIntoTheDisk(&PeerWg, piecesToWrite)
-
-	t.StartPeers(&PeerWg)
-
-	// clear connections 
-	// t.DeleteAbandonedPeers()
-
-	// curPiece := uint32(0)
-
-	for curPiece := int64(0); uint32(curPiece) < (t.NPiece); curPiece += 1{
-
-		if (curPiece + 1) % 3 == 0{
-			// get New peers
-			fmt.Print("get new peers")
-			t.GetUdpPeers()
-			t.StartPeers(&PeerWg)
-			t.PrintPeers()
-		}
-		piece := bittorent.NewPieceWork(uint32(curPiece), uint32(t.PieceLength), uint32(t.Length), t.Pieces[curPiece])
-		for _, p := range(t.Peers){
-				if p.IsGood(){
-					p.PieceWorkRecvChan <- piece
-				}
-		}
-
-
-	for !piece.Done() {
-		// piece_send =0 
-		time.Sleep(time.Millisecond * 200)
-		piece.PrintState()
-		t.DeleteAbandonedPeers()
-	}
-	
-	if !piece.ValidateEntigrity(){
-			fmt.Println("piece ", curPiece, "failled entigrity checks")		
-			curPiece -= 1
-			continue
-	}
-	piecesToWrite <- *piece		
-	} 
-    PeerWg.Wait()
-}
-
-
-
-func (t *TorrentStreaming) ParsePiece(p *bittorent.PieceWork, wg *sync.WaitGroup){
-
-
-	p.Downloaded += p.Size
-}
-
-
 
 
 func NewTorrentStreaming(p string, t *bittorent.TorrentFile) *TorrentStreaming {
@@ -199,7 +52,23 @@ func NewTorrentStreaming(p string, t *bittorent.TorrentFile) *TorrentStreaming {
 		bitfield     []byte
 	)
 
-    
+	// incase there is no tracker
+	trackers := []string{
+	"udp://tracker.opentrackr.org:1337/announce",
+	"udp://tracker.torrent.eu.org:451/announce",
+	"udp://tracker.dler.org:6969/announce",
+	"udp://open.stealth.si:80/announce",
+	"udp://open.demonii.com:1337/announce",
+	"https://tracker.moeblog.cn:443/announce",
+	"udp://open.dstud.io:6969/announce",
+	"udp://tracker.srv00.com:6969/announce",
+	"https://tracker.zhuqiy.com:443/announce",
+	"https://tracker.pmman.tech:443/announce",
+	}
+
+	for _, val := range(trackers){
+		t.AnnounceList = append(t.AnnounceList, []string{val})
+	}
 	for _, val := range t.Info.Files {
 		files = append(files, *bittorent.Newfile(filepath.Join(val.Path...), uint32(val.Length)))
 	}
@@ -251,8 +120,192 @@ func NewTorrentStreaming(p string, t *bittorent.TorrentFile) *TorrentStreaming {
 	return &TorrentStreaming{PeerId: peerId, InfoHash: [20]byte(t.InfoHash), Port: uint16(portUint64), Length: t.CalculateLength(),
 		 Files: files, UdpTrackers: udpTrackers, HttpTrackers: httpTrackers, Left: t.CalculateLength(), Downloaded: 0, PieceLength : t.Info.PieceLength, 
 		Bitfield: bitfield, Peers : make(map[string]*bittorent.Peer),
-		NPiece: uint32(n_piece), Pieces: pieces, MoviePath: os.Getenv("FILE_UPLOAD_PATH"),}
+		NPiece: uint32(n_piece), Pieces: pieces, MoviePath: os.Getenv("MOVIES_PATH"), PieceWorkRecvChan  : make(chan *bittorent.PieceWork, 10),
+	PieceWorkResChan  : make(chan *bittorent.PieceWork, 10)}
 }
+
+func (t *TorrentStreaming) GetState() *bittorent.CurrentState {
+
+	return &bittorent.CurrentState{Downloaded: t.Downloaded, Left: t.Left, Port: t.Port, PeerId: t.PeerId, InfoHash: t.InfoHash}
+}
+
+
+func (t *TorrentStreaming) DeleteAbandonedPeers(){
+		for _, p := range(t.Peers){
+			if !p.IsGood(){
+				p.Clear()
+				delete(t.Peers, p.Id())
+			}
+		}
+}
+
+
+func (t *TorrentStreaming) WritePicesIntoTheDisk(wg *sync.WaitGroup, pieces chan bittorent.PieceWork){
+	defer wg.Done()
+	curFile := 0
+
+	var (
+		data []byte
+	)
+	MovieDirectory := filepath.Join(t.MoviePath, fmt.Sprintf("%s-%d-movie", uuid.NewString(), time.Now().Unix()))
+	err := os.MkdirAll(MovieDirectory, 0755)
+	if err != nil {
+		fmt.Println("err", err)
+	}
+	
+	for piece := range(pieces){
+
+		if curFile >= len(t.Files){
+			fmt.Println("the whole torrent is downloaded ")
+			return
+		}
+		file := t.Files[curFile]
+
+		if !file.IsCreated(){
+			err := file.Create(MovieDirectory)
+			fmt.Println(">>>>creating file err ", err, MovieDirectory)
+		}
+
+		data = append(data, piece.Buffer...)
+
+
+		overlflow , err := file.WriteData(int(piece.Index),data)
+		if err == nil {
+			continue
+		}
+		if len(overlflow) != 0{
+			data = append(data, piece.Buffer...)
+		}
+		if file.Done(){
+			curFile += 1
+		}
+	}
+
+}
+
+
+func (t *TorrentStreaming) PrintPeers(){
+
+	fmt.Println("-- peers -- ")
+	for _, p := range(t.Peers){
+		fmt.Println(p.Id())
+	}
+}
+
+func (t *TorrentStreaming) StartPeers(wg *sync.WaitGroup){
+    
+	for _, val := range(t.Peers){
+		if val.Started {
+			continue
+		}
+		fmt.Println("starting peers", val.Id())
+		val.Started = true
+		val.SetInfo(t.InfoHash, t.PeerId)
+        val.InitBitField(int((((t.Length + (t.PieceLength - 1)) / t.PieceLength) + 7) / 8))
+        val.SetChannel(t.PieceWorkRecvChan , t.PieceWorkResChan)
+		wg.Add(1)
+        go val.PeerGoRotine(wg)
+    }
+}
+// MonitorPeers goal of this is to download the movie
+func (t *TorrentStreaming) MonitorPeers(wg *sync.WaitGroup){
+
+    var (
+		// piece_send int
+        PeerWg sync.WaitGroup
+		piecesToWrite chan bittorent.PieceWork
+
+    )
+
+      
+	defer wg.Done()
+	piecesToWrite = make(chan  bittorent.PieceWork, 20)
+
+    t.GetUdpPeers()
+
+	go t.WritePicesIntoTheDisk(&PeerWg, piecesToWrite)
+
+	t.StartPeers(&PeerWg)
+
+	// clear connections 
+	// t.DeleteAbandonedPeers()
+
+	// curPiece := uint32(0)
+
+	windowPieces := 5
+	for curPiece := int64(0); uint32(curPiece) < (t.NPiece); curPiece += int64(windowPieces){
+
+		
+		
+		// if (curPiece + 1) % 3 == 0{
+		// 	// get New peers
+		// 	fmt.Print("get new peers")
+		// 	t.GetUdpPeers()
+		// 	t.StartPeers(&PeerWg)
+		// 	t.PrintPeers()
+		// }
+		if windowPieces + int(curPiece) > int(t.NPiece){
+			windowPieces = int(t.NPiece) - int(curPiece)
+		}
+
+		for i := curPiece; i < curPiece + int64(windowPieces); i += 1{
+			fmt.Println("sending peice", i )
+			t.PieceWorkRecvChan <- bittorent.NewPieceWork(uint32(i), uint32(t.PieceLength), uint32(t.Length), t.Pieces[curPiece])
+		}
+		// for _, p := range(t.Peers){
+		// 		if p.IsGood(){
+		// 			select {
+		// 			case p.PieceWorkRecvChan <- piece:
+		// 			default:
+		// 			}
+		// 		}
+		// }
+		n := 0
+		for  n < windowPieces {
+			select{
+			case PieceRes := <- t.PieceWorkResChan:
+				fmt.Println(PieceRes.Index, "reciving piece")
+				 status := PieceRes.ValidateEntigrity()
+				if !status{
+					t.PieceWorkRecvChan <- PieceRes
+				}else{
+					piecesToWrite <- *PieceRes
+					n += 1
+				}
+			default:
+				// fmt.Println("nothing was recived")
+				time.Sleep(time.Millisecond * 200)
+			}
+
+		}
+
+	// for !piece.Done() {
+	// 	// piece_send =0 
+	// 	piece.PrintState()
+	// 	t.DeleteAbandonedPeers()
+	// }
+	
+	// if !piece.ValidateEntigrity(){
+	// 		fmt.Println("piece ", curPiece, "failled entigrity checks")		
+	// 		curPiece -= 1
+	// 		continue
+	// }
+	// i have this piece 
+			
+	} 
+    PeerWg.Wait()
+}
+
+
+
+func (t *TorrentStreaming) ParsePiece(p *bittorent.PieceWork, wg *sync.WaitGroup){
+
+
+	p.Downloaded += p.Size
+}
+
+
+
 
 
 
@@ -320,7 +373,7 @@ func (t *TorrentStreaming) GetUdpPeers(){
         recv chan bittorent.UdpTracker
         n_gorotines int
     )
-    n_gorotines = 20
+    n_gorotines = 10
 
 
     recv = make(chan bittorent.UdpTracker, 50)

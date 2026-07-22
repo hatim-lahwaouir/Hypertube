@@ -1,4 +1,4 @@
-package bittorentProtocol 
+package bittorentProtocol
 
 import (
 	bencode "github.com/jackpal/bencode-go"
@@ -22,7 +22,7 @@ type FileInfo struct {
 
 type InfoMultipleFiles struct {
 	Files       []FileInfo `bencode:"files"`
-	PieceLength int64        `bencode:"piece length"`
+	PieceLength int64      `bencode:"piece length"`
 	Pieces      string     `bencode:"pieces"`
 	Name        string     `bencode:"name"`
 }

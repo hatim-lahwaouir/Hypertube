@@ -1,5 +1,4 @@
-package bittorentProtocol 
-
+package bittorentProtocol
 
 import (
 	"bytes"

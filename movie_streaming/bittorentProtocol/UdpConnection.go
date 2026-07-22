@@ -1,17 +1,10 @@
-package bittorentProtocol 
-
-
+package bittorentProtocol
 
 import (
-	"encoding/binary"
 	"bytes"
 	"crypto/rand"
+	"encoding/binary"
 )
-
-
-
-
-
 
 type ConnectionReq struct {
 	ProtocolId    int64
@@ -37,4 +30,3 @@ type ConnectionResp struct {
 	TransactionId int32
 	ConnectionId  int64
 }
-

@@ -1,4 +1,4 @@
-package bittorentProtocol 
+package bittorentProtocol
 
 import (
 	"bytes"
@@ -17,8 +17,6 @@ type UdpTracker struct {
 	IsGood       bool
 }
 
-
-
 func NewUdpTracker(trackerUrl string) UdpTracker {
 	endpoint, _ := url.Parse(trackerUrl)
 
@@ -32,16 +30,16 @@ func (u *UdpTracker) GetConnectionId() {
 		connResp ConnectionResp
 	)
 
-	conn, err := net.DialTimeout(u.Scheme, u.Host, 1 * time.Second)
+	conn, err := net.DialTimeout(u.Scheme, u.Host, 1*time.Second)
 
 	if err != nil {
 		fmt.Println("errror starting connection", err.Error())
 		return
 	}
 	defer conn.Close()
-    if err := conn.SetDeadline(time.Now().Add(6 * time.Second)); err != nil {
+	if err := conn.SetDeadline(time.Now().Add(6 * time.Second)); err != nil {
 		fmt.Println("errror setting dead line  ", err.Error())
-		return 
+		return
 	}
 
 	req, rawReq := NewConnectionReq()
@@ -98,7 +96,7 @@ func (u *UdpTracker) NewAnnounceRequest(state *CurrentState) *AnnounceRequest {
 	}
 }
 
-func (u *UdpTracker) GetPeers(state *CurrentState) ([]Peer) {
+func (u *UdpTracker) GetPeers(state *CurrentState) []Peer {
 	var (
 		resp []byte
 	)
@@ -106,7 +104,7 @@ func (u *UdpTracker) GetPeers(state *CurrentState) ([]Peer) {
 		return nil
 	}
 
-	conn, err := net.DialTimeout(u.Scheme, u.Host, time.Second * 1)
+	conn, err := net.DialTimeout(u.Scheme, u.Host, time.Second*1)
 	if err != nil {
 		fmt.Println("errror starting connection", err.Error())
 		return nil
@@ -144,8 +142,8 @@ func (u *UdpTracker) GetPeers(state *CurrentState) ([]Peer) {
 	}
 
 	if req.TransactionId != connResp.TransactionId || connResp.Action != ActionAnnounce {
-        return nil
+		return nil
 	}
 
-    return NewPeers(resp, n)
+	return NewPeers(resp, n)
 }
