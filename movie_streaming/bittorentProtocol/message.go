@@ -29,17 +29,15 @@ type Msg struct {
 
 
 func HaveMsg(index uint32) []byte{
-
-
-	return nil
+	m := Msg{ID: MsgHave,
+	Payload: make([]byte, 4),
+	}
+	binary.BigEndian.PutUint32(m.Payload, index)
+	return m.Serialize()
 }
 
 func (m *Msg) Serialize() []byte {
-	var (
-		length uint32
-	)
-
-	length = uint32(1 + len(m.Payload))
+	var length  = uint32(1 + len(m.Payload))
 
 	buf := make([]byte, 4+length)
 	binary.BigEndian.PutUint32(buf[0:4], length)
@@ -59,6 +57,20 @@ func (m *Msg) ParseHave() (uint32, bool) {
 }
 
 
+
+
+func (m *Msg) ParseRequest() (uint32, uint32,uint32, bool) {
+
+	if len(m.Payload) != 12 {
+		return 0, 0, 0, false
+	}
+
+	pieceIndex := binary.BigEndian.Uint32(m.Payload[0:4])
+	begin := binary.BigEndian.Uint32(m.Payload[4:8])
+	length := binary.BigEndian.Uint32(m.Payload[4:8])
+
+	return pieceIndex, begin, length, true
+}
 
 
 

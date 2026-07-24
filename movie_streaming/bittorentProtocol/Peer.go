@@ -22,6 +22,7 @@ type Peer struct {
 	valid      bool
 	UnChoke    bool
 	PacketSent int
+	ChokeUpload bool
 
 	InfoHash     [20]byte
 	Mu           sync.RWMutex
@@ -32,9 +33,83 @@ type Peer struct {
 	PieceWorkRecvChan chan *PieceWork
 	PieceWorkResChan  chan *PieceWork
 	Started           bool
+	BroadCastMsg chan []byte
 
 	CurPiece *PieceWork
+	Interested bool
+	BytesRecived uint32
+	fileUpload []*FileUploads
+	HasBitField bool
 }
+
+
+func (p *Peer) SetUpFileUploads(fileUpload []*FileUploads){
+	p.fileUpload = fileUpload
+}
+
+func (p *Peer) RecivedBytes(n uint32){
+	p.PeerMutex.Lock()
+	defer p.PeerMutex.Unlock()
+	p.BytesRecived += n
+}
+
+func (p *Peer) ResetBytesReceived(){
+	p.PeerMutex.Lock()
+	defer p.PeerMutex.Unlock()
+	p.BytesRecived = 0
+}
+
+func (p *Peer) UnChokePeer(status bool){
+	
+	
+	p.PeerMutex.Lock()
+	defer p.PeerMutex.Unlock()
+
+	if !p.ChokeUpload && status{
+		return
+	}
+
+
+	p.ChokeUpload = true
+	state := MsgChoke
+	if status{
+		state = MsgUnchoke
+		p.ChokeUpload = false
+	}
+
+	m := Msg{ID: state}
+	p.Conn.SetWriteDeadline(time.Now().Add(time.Second * 3))
+	if _, err := p.Conn.Write(m.Serialize()); err != nil {
+		p.SetGood(false)
+	}
+}
+
+
+func (p *Peer) ChokeUploadStatus() bool {
+	return p.ChokeUpload
+}
+
+
+
+func (p *Peer) GetBytesReceived() uint32{
+	p.PeerMutex.Lock()
+	defer p.PeerMutex.Unlock()
+	return p.BytesRecived
+}
+
+
+func (p *Peer) InterestedStatus(status bool) {
+	p.PeerMutex.Lock()
+	defer p.PeerMutex.Unlock()
+	p.Interested = status
+}
+
+func (p *Peer) IsInterested() bool {
+	p.PeerMutex.Lock()
+	defer p.PeerMutex.Unlock()
+	return p.Interested
+}
+
 
 func (p *Peer) SetChannel(PieceWorkRecvChan chan *PieceWork, PieceWorkResChan chan *PieceWork) {
 	p.PieceWorkRecvChan = PieceWorkRecvChan
@@ -82,7 +157,7 @@ func (p *Peer) IsGood() bool {
 	return p.valid
 }
 
-func (p *Peer) Id() string {
+func (p *Peer) ID() string {
 	return p.IP.String() + ":" + strconv.FormatUint(uint64(p.Port), 10)
 
 }
@@ -91,6 +166,7 @@ func (p *Peer) SetInfo(infoHash [20]byte, clientID [20]byte) {
 	p.InfoHash = infoHash
 	p.ClientID = clientID
 }
+
 
 func (p *Peer) HasPiece(index uint32) bool {
 	p.PeerMutex.Lock()
@@ -222,6 +298,8 @@ func (p *Peer) Intersted() error {
 	return nil
 }
 
+
+
 func (p *Peer) Request(cur uint32, base uint32, length uint32) error {
 	if !p.IsGood() || !p.UnChoke {
 		return errors.New("invalid Peer")
@@ -238,6 +316,9 @@ func (p *Peer) Request(cur uint32, base uint32, length uint32) error {
 
 	binary.BigEndian.PutUint32(buf[13:17], length)
 
+	p.PeerMutex.Lock()
+	defer p.PeerMutex.Unlock()
+
 	p.Conn.SetWriteDeadline(time.Now().Add(time.Second * 15))
 	if _, err := p.Conn.Write(buf); err != nil {
 		p.SetGood(false)
@@ -248,10 +329,60 @@ func (p *Peer) Request(cur uint32, base uint32, length uint32) error {
 
 }
 
+func (p *Peer) SendPiece(index uint32, begin uint32, piece []byte) error {
+	if !p.IsGood() || !p.UnChoke {
+		return errors.New("invalid Peer")
+	}
+	buf := make([]byte, 8 + len(piece))
+
+	binary.BigEndian.PutUint32(buf[0:4], 13)
+
+	buf[4] = byte(MsgPiece)
+
+	binary.BigEndian.PutUint32(buf[5:9], index)
+
+	binary.BigEndian.PutUint32(buf[9:13], begin)
+
+	copy(buf[13:], piece)
+	p.PeerMutex.Lock()
+	defer p.PeerMutex.Unlock()
+
+	p.Conn.SetWriteDeadline(time.Now().Add(time.Second * 15))
+	if _, err := p.Conn.Write(buf); err != nil {
+		p.SetGood(false)
+		return err
+	}
+	p.PacketSent++
+	return nil
+
+}
+
+
+
 func (p *Peer) SetCurrentPiece(piece *PieceWork){
 		p.PeerMutex.Lock()
 		p.CurPiece = piece
 		p.PeerMutex.Unlock()
+}
+
+
+func (p *Peer) InitBroadcast(){
+	p.BroadCastMsg = make(chan []byte, 10)
+}
+
+func (p *Peer) Broadcast(wg *sync.WaitGroup){
+	defer wg.Done()
+    
+    for msg := range p.BroadCastMsg {
+        p.PeerMutex.Lock()
+        p.Conn.SetWriteDeadline(time.Now().Add(time.Second * 15))
+        if _, err := p.Conn.Write(msg); err != nil {
+            p.SetGood(false)
+			p.PeerMutex.Unlock()
+            return
+		}
+		p.PeerMutex.Unlock()
+    }
 }
 
 func (p *Peer) PeerGoRotine(wg *sync.WaitGroup) {
@@ -259,6 +390,7 @@ func (p *Peer) PeerGoRotine(wg *sync.WaitGroup) {
 	var (
 		other sync.WaitGroup
 	)
+	defer other.Wait()
 
 	p.Connect()
 	if !p.IsGood() {
@@ -275,18 +407,26 @@ func (p *Peer) PeerGoRotine(wg *sync.WaitGroup) {
 		return
 	}
 	// here we will start a gorotine for reading peer messages
-	other.Add(1)
+
 	p.Intersted()
 
+	other.Add(2)
 	go p.PeerMesgs(&other)
+	go p.Broadcast(&other)
 
 	for piece := range p.PieceWorkRecvChan {
 
+		if !p.IsGood(){
+			p.PieceWorkRecvChan <- piece
+			return
+		}
+
 		if !p.HasPiece(piece.Index) || !p.PeerIsChoking() {
 			p.PieceWorkRecvChan <- piece
+			time.Sleep(500 * time.Millisecond)
 			continue
 		}
-		fmt.Println("current peer has piece", piece.Index, p.Id())
+		fmt.Println("current peer has piece", piece.Index, p.ID())
 		piecesChan := make(chan uint32, piece.NPiece+1)
 
 		for begin := uint32(0); begin < piece.Size; begin += piece.BlockSize {
@@ -294,24 +434,21 @@ func (p *Peer) PeerGoRotine(wg *sync.WaitGroup) {
 		}
 
 		p.SetCurrentPiece(piece)
+		timeoutTicker := time.NewTicker(3 * time.Second)
+        defer timeoutTicker.Stop()
 
-		good := true
-		limit := time.Now().Add(5 * time.Second)
+		limit := time.Now().Add(3 * time.Second)
 		lastDownload := piece.GetDownloaded()
-		for !piece.Done() && good {
+		for !piece.Done() && p.IsGood() {
 			
 			select {
 			case begin := <-piecesChan:
 				if piece.IsThisDone(begin) {
 					continue
 				}
-				if !p.PeerIsChoking(){
-					good = false
-					break
-				}
-				if !p.CanSendMessage() {
+				if !p.CanSendMessage() || !p.PeerIsChoking() {
 					piecesChan <- begin
-					time.Sleep(100 * time.Millisecond)
+					time.Sleep(200 * time.Millisecond)
 					continue
 				}
 
@@ -319,39 +456,35 @@ func (p *Peer) PeerGoRotine(wg *sync.WaitGroup) {
 				if begin+length > piece.Size {
 					length = piece.Size - begin
 				}
-				// fmt.Println("Requeest for piece  " ,piece.Index, begin / piece.BlockSize, "was sent to ", p.Id())
 				p.Request(piece.Index, begin, length)
 				p.SentMessage()
+			case <- timeoutTicker.C:
 				piece.PrintState()
-			default:
 				if time.Until(limit) < 0 {
 					if lastDownload == piece.GetDownloaded(){
-						good = false
+						p.SetGood(false)
 						break
 					}else{
-						limit = time.Now().Add(5 * time.Second)
+						limit = time.Now().Add(3 * time.Second)
 						lastDownload = piece.GetDownloaded()
 					}
 				}
-				piece.PrintState()
-				time.Sleep(300 * time.Millisecond)
+
+				time.Sleep(500 * time.Millisecond)
 			}
 		}
-		fmt.Println(">>>>>>>>piece is done", piece.Index)
 		if piece.Done() {
 			p.PieceWorkResChan <- piece
 		} else {
 			p.SetCurrentPiece(nil)
 			close(piecesChan)
-			fmt.Println("peer time outed", p.Id())
+			fmt.Println("peer time outed", p.ID())
 			p.Clear()
 			p.PieceWorkRecvChan <- piece
 			return
 		}
 		p.SetCurrentPiece(nil)
 	}
-
-	other.Wait()
 }
 
 func (p *Peer) PeerChokingState(state bool) {
@@ -404,25 +537,41 @@ func (p *Peer) PeerMesgs(wg *sync.WaitGroup) {
 		case MsgPiece:
 			p.ReceivedMessage()
 			index, begin, buf, ok := m.ParsePiece()
-			// fmt.Println("Piece", index, "was received from ", p.Id())
+			// fmt.Println("Piece", index, "was received from ", p.ID())
 			if !ok {
 				continue
 			}
 			if p.CurPiece != nil {
 				p.CurPiece.SetPiece(index, buf, begin)
+				p.RecivedBytes(p.CurPiece.Size)
 			}
 		case MsgRequest:
-			//
+			if !p.IsInterested() || p.ChokeUploadStatus(){
+				continue
+			}
+			fmt.Println("--------------------received a messag request --------------------")
+			index, begin, length, ok := m.ParseRequest()
+			if !ok{
+				fmt.Println("request isn't good")
+				continue
+			}
+			piece, err := GetCurrentPiece(index, begin, length, p.fileUpload)
+			if err != nil {
+				continue
+			}
+			if err := p.SendPiece(index, begin, piece); err != nil {
+				fmt.Println("error sending piece")
+			}
+			// here we need to send the piece
+
+		case MsgInterested:
+			p.InterestedStatus(true)
 		}
 	}
 	// here we will be waiting for peer messages
 }
 
 
-func (p *Peer) Have(pieceIndex uint32 ) {
-
-
-}
 
 
 // Clear function to free all resources allocated
