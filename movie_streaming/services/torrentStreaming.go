@@ -1,7 +1,8 @@
 package services
 
 import (
-"math/rand"
+	mrand "math/rand"
+	"crypto/rand"
 	"fmt"
 	"maps"
 	"net/url"
@@ -31,13 +32,14 @@ type TorrentStreaming struct {
 	Files []*bittorent.File
 
 	HttpTrackers []string
-	UdpTrackers  []bittorent.UdpTracker
+	UdpTrackers  []*bittorent.UdpTracker
 
 	Downloaded int64
 	Left       int64
     Peers      map[string]*bittorent.Peer
 	PeersMutex sync.RWMutex
 	NPiece     uint32
+	
 
 	PieceWorkRecvChan  chan *bittorent.PieceWork
 	PieceWorkResChan chan *bittorent.PieceWork
@@ -50,7 +52,7 @@ func NewTorrentStreaming(p string, t *bittorent.TorrentFile) *TorrentStreaming {
 		files        []*bittorent.File
 		pieces       [][20]byte
 		httpTrackers []string
-		udpTrackers  []bittorent.UdpTracker
+		udpTrackers  []*bittorent.UdpTracker
 		peerId       [20]byte
 		bitfield     []byte
 	)
@@ -116,9 +118,8 @@ func NewTorrentStreaming(p string, t *bittorent.TorrentFile) *TorrentStreaming {
 		peerId = [20]byte{72, 101, 108, 108, 111}
 	}
 
-    n_piece := (t.CalculateLength() + (t.Info.PieceLength  - 1)  ) /  t.Info.PieceLength
+    var n_piece int64 = (t.CalculateLength() + (t.Info.PieceLength  - 1)  ) /  t.Info.PieceLength
     bitfield = make([]byte, (n_piece + 7) / 8) 
-
 
 
 
@@ -183,9 +184,12 @@ func (t *TorrentStreaming) WritePicesIntoTheDisk(wg *sync.WaitGroup, pieces chan
 
 				data = data[bytesToWrite:]
 				globalOffset += bytesToWrite
+				
 			}
 		}
 	}
+
+	// after finishing pieces then clear 
 
 }
 
@@ -211,25 +215,17 @@ func (t *TorrentStreaming) BroadCastHaveMsg(index uint32){
 		if !t.Peers[p].IsGood() {
 			continue
 		}
-		t.Peers[p].BroadCastMsg <- msg
-	}
-}
-
-
-func (t *TorrentStreaming) BroadCastBitField(){
-	
-
-	msg := bittorent.Msg{ID: bittorent.MsgBitfield, Payload: t.Bitfield}
-	t.PeersMutex.Lock()
-	defer t.PeersMutex.Unlock()
-	for p := range(t.Peers){
-		if !t.Peers[p].IsGood() && !t.Peers[p].HasBitField {
+		select {
+		case t.Peers[p].BroadCastMsg <- msg:
+		default:
 			continue
 		}
-		t.Peers[p].BroadCastMsg <- msg.Serialize()
-		t.Peers[p].HasBitField = true
-	}
+
+		}
+		
 }
+
+
 
 func (t *TorrentStreaming) SetPiece(index uint32) {
 	byteIndex := index / 8
@@ -257,32 +253,34 @@ func (t *TorrentStreaming)  TitForTatIshAlgho(wg *sync.WaitGroup){
 		select {
 				case <- evalTicker.C:
 					// get the top 4 peers
-					t.PeersMutex.RLock() // <--- READ LOCK
+					t.PeersMutex.RLock()
 					Peers := slices.Collect(maps.Values(t.Peers))
-					t.PeersMutex.RUnlock() // <--- READ LOCK
+					t.PeersMutex.RUnlock()
 					sort.Slice(Peers, func(i, j int) bool {
 							return Peers[i].GetBytesReceived() > Peers[j].GetBytesReceived()
 						})
-					for i,p := range(Peers){
-						if i < 4 {
-							p.UnChokePeer(true)
-						}else if p != optimisticPeer{
-							p.UnChokePeer(false)
+					for i := range(Peers){
+						if i < 4 && Peers[i].IsInterested() {
+							fmt.Println("peer is interested")
+							Peers[i].UnChokePeer(true)
+						}else if Peers[i] != optimisticPeer{
+							Peers[i].UnChokePeer(false)
 						}
+						Peers[i].ResetBytesReceived()
 					}
 
 				case <- optimisticTicker.C:
 						var chokedPeers []*bittorent.Peer
 						t.PeersMutex.RLock() 
-						for _, p := range t.Peers {
-							if p.IsGood() && p.ChokeUploadStatus(){
-								chokedPeers = append(chokedPeers, p)
+						for i := range t.Peers {
+							if t.Peers[i].IsGood() && t.Peers[i].ChokeUploadStatus(){
+								chokedPeers = append(chokedPeers, t.Peers[i])
 							}
 						}
 						t.PeersMutex.RUnlock()
 
 						if len(chokedPeers) > 0 {
-							randomIndex := rand.Intn(len(chokedPeers))
+							randomIndex := mrand.Intn(len(chokedPeers))
 							chosen := chokedPeers[randomIndex]
 							
 							chosen.UnChokePeer(true)
@@ -311,24 +309,18 @@ func (t *TorrentStreaming) MonitorPeers(wg *sync.WaitGroup){
 	piecesToWrite = make(chan  *bittorent.PieceWork, 20)
 
     
-	wg.Add(1)
+	PeerWg.Add(1)
 	go t.WritePicesIntoTheDisk(&PeerWg, piecesToWrite)
+	//PeerWg.Add(1)
+ 	// go t.TitForTatIshAlgho(&PeerWg)
 
-
-	// clear connections 
-	// t.DeleteAbandonedPeers()
-
-	// curPiece := uint32(0)
-
-	windowPieces := 10
+	windowPieces := 6
 	for curPiece := int64(0); uint32(curPiece) < (t.NPiece); curPiece += int64(windowPieces){
 		
 		
 
 		t.GetUdpPeers()
 		t.StartPeers(&PeerWg)
-
-		t.BroadCastBitField()
 		if windowPieces + int(curPiece) > int(t.NPiece){
 			windowPieces = int(t.NPiece) - int(curPiece)
 		}
@@ -341,27 +333,26 @@ func (t *TorrentStreaming) MonitorPeers(wg *sync.WaitGroup){
 		for  n < windowPieces {
 			select{
 			case PieceRes := <- t.PieceWorkResChan:
-				fmt.Println(PieceRes.Index, "reciving piece")
 
 				if !PieceRes.ValidateEntigrity(){
-					fmt.Println("entigirity failled")
 					t.PieceWorkRecvChan <- PieceRes
 				}else{
-					fmt.Println("entigirity succed")
 					piecesToWrite <- PieceRes
+					//
 					t.BroadCastHaveMsg(PieceRes.Index)
+					t.Downloaded += int64(PieceRes.Size)
+					t.SetPiece(PieceRes.Index)
 					n += 1
 				}
 			default:
 				// fmt.Println("nothing was recived")
 				t.DeleteAbandonedPeers()
-				
-				time.Sleep(time.Microsecond * 500)
+				fmt.Println("nothing")
+				time.Sleep(time.Second * 1)
 			}
 
 		}
-		time.Sleep(1 * time.Second)
-		fmt.Println("piece that are good", n)
+		fmt.Printf("curent [%d/%d,%d]\n", curPiece + int64(windowPieces), t.NPiece, len(t.Pieces))
 			
 	} 
     PeerWg.Wait()
@@ -396,6 +387,7 @@ func (t *TorrentStreaming) GetHTTPPeers(){
 func (t *TorrentStreaming) StartPeers(wg *sync.WaitGroup){
     
 	t.PeersMutex.RLock()
+	fmt.Println("cur peers", len(t.Peers))
 	for _, val := range(t.Peers){
 		if val.Started {
 			continue
@@ -405,6 +397,9 @@ func (t *TorrentStreaming) StartPeers(wg *sync.WaitGroup){
         val.InitBitField(int((((t.Length + (t.PieceLength - 1)) / t.PieceLength) + 7) / 8))
         val.SetChannel(t.PieceWorkRecvChan , t.PieceWorkResChan)
 		val.InitBroadcast()
+		if t.Downloaded > 0 { 
+			val.SetUpServerBitField(t.Bitfield)
+		}
 		var fileUploads []*bittorent.FileUploads
 		
 		for _, f := range(t.Files) {
@@ -425,15 +420,15 @@ func (t *TorrentStreaming) GetUdpPeers(){
 
         waitGetUdpPeers sync.WaitGroup
         waitWorkersUdpPeers sync.WaitGroup
-        peerRes chan []bittorent.Peer
-        recv chan bittorent.UdpTracker
+        peerRes chan []*bittorent.Peer
+        recv chan *bittorent.UdpTracker
         n_gorotines int
     )
     n_gorotines = 10
 
 	
-    recv = make(chan bittorent.UdpTracker, 50)
-    peerRes = make(chan []bittorent.Peer, 100)
+    recv = make(chan *bittorent.UdpTracker, 50)
+    peerRes = make(chan []*bittorent.Peer, 100)
 
 	// using http trackers
 	cur := t.GetState()
@@ -455,7 +450,7 @@ func (t *TorrentStreaming) GetUdpPeers(){
     waitGetUdpPeers.Wait()
 }
 
-func GetUdpPeersWorker(recv chan bittorent.UdpTracker, res chan []bittorent.Peer,  cur *bittorent.CurrentState ,wg *sync.WaitGroup) {
+func GetUdpPeersWorker(recv chan *bittorent.UdpTracker, res chan []*bittorent.Peer,  cur *bittorent.CurrentState ,wg *sync.WaitGroup) {
    
 
    defer wg.Done()
@@ -467,9 +462,9 @@ func GetUdpPeersWorker(recv chan bittorent.UdpTracker, res chan []bittorent.Peer
    }
 }
 
-func (t *TorrentStreaming) StorePeersFromUdpTracker(res chan []bittorent.Peer, wg *sync.WaitGroup){
+func (t *TorrentStreaming) StorePeersFromUdpTracker(res chan []*bittorent.Peer, wg *sync.WaitGroup){
     var (
-        peers []bittorent.Peer
+        peers []*bittorent.Peer
     )
     defer wg.Done()
     
@@ -479,8 +474,12 @@ func (t *TorrentStreaming) StorePeersFromUdpTracker(res chan []bittorent.Peer, w
 
 	//t.Peers = peers
 	t.PeersMutex.Lock()
-    for _ , p := range peers {
-        t.Peers[p.ID()] = &p
+	for i := range peers {
+	
+		if _, exists := t.Peers[peers[i].ID()]; exists {
+			continue
+		}
+        t.Peers[peers[i].ID()] = peers[i]
     }
 	t.PeersMutex.Unlock()
 }

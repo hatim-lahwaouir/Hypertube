@@ -15,66 +15,70 @@ import (
 )
 
 type Peer struct {
-	IP         net.IP
-	Port       uint16
-	Conn       net.Conn
-	BitField   []byte
-	valid      bool
-	UnChoke    bool
-	PacketSent int
+	IP          net.IP
+	Port        uint16
+	Conn        net.Conn
+	BitField    []byte
+	valid       bool
+	UnChoke     bool
+	PacketSent  int
 	ChokeUpload bool
 
-	InfoHash     [20]byte
-	Mu           sync.RWMutex
+	InfoHash [20]byte
+
 	PeerMutex    sync.Mutex
+	ConnMutext   sync.Mutex
 	MessagesSent int
 	ClientID     [20]byte
 
 	PieceWorkRecvChan chan *PieceWork
 	PieceWorkResChan  chan *PieceWork
 	Started           bool
-	BroadCastMsg chan []byte
+	BroadCastMsg      chan []byte
 
-	CurPiece *PieceWork
-	Interested bool
+	CurPiece     *PieceWork
+	Interested   bool
 	BytesRecived uint32
-	fileUpload []*FileUploads
-	HasBitField bool
+	fileUpload   []*FileUploads
+	HasBitField  bool
+
+	ServerBitField []byte
 }
 
+func (p *Peer) SetUpServerBitField(b []byte) {
+	p.ServerBitField = b
+}
 
-func (p *Peer) SetUpFileUploads(fileUpload []*FileUploads){
+func (p *Peer) SetUpFileUploads(fileUpload []*FileUploads) {
 	p.fileUpload = fileUpload
 }
 
-func (p *Peer) RecivedBytes(n uint32){
+func (p *Peer) RecivedBytes(n uint32) {
 	p.PeerMutex.Lock()
 	defer p.PeerMutex.Unlock()
 	p.BytesRecived += n
 }
 
-func (p *Peer) ResetBytesReceived(){
+func (p *Peer) ResetBytesReceived() {
 	p.PeerMutex.Lock()
 	defer p.PeerMutex.Unlock()
 	p.BytesRecived = 0
 }
 
-func (p *Peer) UnChokePeer(status bool){
-	
-	
-	p.PeerMutex.Lock()
-	defer p.PeerMutex.Unlock()
+func (p *Peer) UnChokePeer(status bool) {
 
-	if !p.ChokeUpload && status{
+	p.ConnMutext.Lock()
+	defer p.ConnMutext.Unlock()
+
+	if p.ChokeUploadStatus() == !status {
 		return
 	}
 
+	p.UpdateChokeUpload(!status)
 
-	p.ChokeUpload = true
 	state := MsgChoke
-	if status{
+	if status {
 		state = MsgUnchoke
-		p.ChokeUpload = false
 	}
 
 	m := Msg{ID: state}
@@ -84,19 +88,23 @@ func (p *Peer) UnChokePeer(status bool){
 	}
 }
 
-
 func (p *Peer) ChokeUploadStatus() bool {
+	p.PeerMutex.Lock()
+	defer p.PeerMutex.Unlock()
 	return p.ChokeUpload
 }
 
+func (p *Peer) UpdateChokeUpload(status bool) {
+	p.PeerMutex.Lock()
+	defer p.PeerMutex.Unlock()
+	p.ChokeUpload = status
+}
 
-
-func (p *Peer) GetBytesReceived() uint32{
+func (p *Peer) GetBytesReceived() uint32 {
 	p.PeerMutex.Lock()
 	defer p.PeerMutex.Unlock()
 	return p.BytesRecived
 }
-
 
 func (p *Peer) InterestedStatus(status bool) {
 	p.PeerMutex.Lock()
@@ -109,7 +117,6 @@ func (p *Peer) IsInterested() bool {
 	defer p.PeerMutex.Unlock()
 	return p.Interested
 }
-
 
 func (p *Peer) SetChannel(PieceWorkRecvChan chan *PieceWork, PieceWorkResChan chan *PieceWork) {
 	p.PieceWorkRecvChan = PieceWorkRecvChan
@@ -135,7 +142,7 @@ func (p *Peer) CanSendMessage() bool {
 	p.PeerMutex.Lock()
 	defer p.PeerMutex.Unlock()
 
-	return p.MessagesSent < 16
+	return p.MessagesSent < 32
 }
 
 func (p *Peer) GetMessageSent() int {
@@ -145,15 +152,14 @@ func (p *Peer) GetMessageSent() int {
 }
 
 func (p *Peer) SetGood(b bool) {
-	p.Mu.Lock()
+	p.PeerMutex.Lock()
 	p.valid = b
-	p.Mu.Unlock()
+	p.PeerMutex.Unlock()
 }
 
 func (p *Peer) IsGood() bool {
-	p.Mu.RLock()
-
-	defer p.Mu.RUnlock()
+	p.PeerMutex.Lock()
+	defer p.PeerMutex.Unlock()
 	return p.valid
 }
 
@@ -166,7 +172,6 @@ func (p *Peer) SetInfo(infoHash [20]byte, clientID [20]byte) {
 	p.InfoHash = infoHash
 	p.ClientID = clientID
 }
-
 
 func (p *Peer) HasPiece(index uint32) bool {
 	p.PeerMutex.Lock()
@@ -189,8 +194,8 @@ func (p *Peer) SetPiece(index uint32) {
 	}
 }
 
-func NewPeers(resp []byte, n int) []Peer {
-	var peers []Peer
+func NewPeers(resp []byte, n int) []*Peer {
+	var peers []*Peer
 
 	peersBinary := resp[20:n]
 	peerSize := 6
@@ -207,14 +212,14 @@ func NewPeers(resp []byte, n int) []Peer {
 		port := binary.BigEndian.Uint16(portBytes)
 		ip := net.IP(ipBytes)
 
-		peers = append(peers, Peer{IP: ip, Port: port, valid: true})
+		peers = append(peers, &Peer{IP: ip, Port: port, valid: true})
 	}
 
 	return peers
 }
 
 func (p *Peer) Connect() {
-	conn, err := net.DialTimeout("tcp", p.IP.String()+":"+strconv.FormatUint(uint64(p.Port), 10), 2*time.Second)
+	conn, err := net.DialTimeout("tcp", p.IP.String()+":"+strconv.FormatUint(uint64(p.Port), 10), 5*time.Second)
 	if err != nil {
 		p.SetGood(false)
 		return
@@ -287,6 +292,8 @@ func (p *Peer) Intersted() error {
 		return nil
 	}
 
+	p.ConnMutext.Lock()
+	defer p.ConnMutext.Unlock()
 	p.Conn.SetWriteDeadline(time.Now().Add(time.Second * 15))
 	m := Msg{ID: MsgInterested}
 	data := m.Serialize()
@@ -297,8 +304,6 @@ func (p *Peer) Intersted() error {
 
 	return nil
 }
-
-
 
 func (p *Peer) Request(cur uint32, base uint32, length uint32) error {
 	if !p.IsGood() || !p.UnChoke {
@@ -316,8 +321,8 @@ func (p *Peer) Request(cur uint32, base uint32, length uint32) error {
 
 	binary.BigEndian.PutUint32(buf[13:17], length)
 
-	p.PeerMutex.Lock()
-	defer p.PeerMutex.Unlock()
+	p.ConnMutext.Lock()
+	defer p.ConnMutext.Unlock()
 
 	p.Conn.SetWriteDeadline(time.Now().Add(time.Second * 15))
 	if _, err := p.Conn.Write(buf); err != nil {
@@ -330,22 +335,20 @@ func (p *Peer) Request(cur uint32, base uint32, length uint32) error {
 }
 
 func (p *Peer) SendPiece(index uint32, begin uint32, piece []byte) error {
-	if !p.IsGood() || !p.UnChoke {
+	if !p.IsGood() || p.ChokeUploadStatus() {
 		return errors.New("invalid Peer")
 	}
-	buf := make([]byte, 8 + len(piece))
+	payloadLen := (9 + len(piece))
+	buf := make([]byte, 4+payloadLen)
 
-	binary.BigEndian.PutUint32(buf[0:4], 13)
-
+	binary.BigEndian.PutUint32(buf[0:4], uint32(payloadLen))
 	buf[4] = byte(MsgPiece)
-
 	binary.BigEndian.PutUint32(buf[5:9], index)
-
 	binary.BigEndian.PutUint32(buf[9:13], begin)
-
 	copy(buf[13:], piece)
-	p.PeerMutex.Lock()
-	defer p.PeerMutex.Unlock()
+
+	p.ConnMutext.Lock()
+	defer p.ConnMutext.Unlock()
 
 	p.Conn.SetWriteDeadline(time.Now().Add(time.Second * 15))
 	if _, err := p.Conn.Write(buf); err != nil {
@@ -357,32 +360,56 @@ func (p *Peer) SendPiece(index uint32, begin uint32, piece []byte) error {
 
 }
 
-
-
-func (p *Peer) SetCurrentPiece(piece *PieceWork){
-		p.PeerMutex.Lock()
-		p.CurPiece = piece
-		p.PeerMutex.Unlock()
+func (p *Peer) SetCurrentPiece(piece *PieceWork) {
+	p.PeerMutex.Lock()
+	p.CurPiece = piece
+	p.PeerMutex.Unlock()
 }
 
-
-func (p *Peer) InitBroadcast(){
+func (p *Peer) InitBroadcast() {
 	p.BroadCastMsg = make(chan []byte, 10)
 }
 
-func (p *Peer) Broadcast(wg *sync.WaitGroup){
+func (p *Peer) Broadcast(wg *sync.WaitGroup) {
 	defer wg.Done()
-    
-    for msg := range p.BroadCastMsg {
-        p.PeerMutex.Lock()
-        p.Conn.SetWriteDeadline(time.Now().Add(time.Second * 15))
-        if _, err := p.Conn.Write(msg); err != nil {
-            p.SetGood(false)
-			p.PeerMutex.Unlock()
-            return
+
+	for msg := range p.BroadCastMsg {
+		p.ConnMutext.Lock()
+		p.Conn.SetWriteDeadline(time.Now().Add(time.Second * 15))
+		if _, err := p.Conn.Write(msg); err != nil {
+			p.SetGood(false)
+			p.ConnMutext.Unlock()
+			return
 		}
-		p.PeerMutex.Unlock()
-    }
+		p.ConnMutext.Unlock()
+	}
+}
+
+func (p *Peer) SendBitField() error {
+
+
+	if !p.IsGood() {
+		return errors.New("client isn't good")
+	}
+
+
+	if p.ServerBitField == nil {
+		return nil
+	}
+
+	msg := Msg{ID: MsgBitfield, Payload: p.ServerBitField}
+
+	p.ConnMutext.Lock()
+	defer p.ConnMutext.Unlock()
+
+	p.Conn.SetWriteDeadline(time.Now().Add(time.Second * 15))
+	if _, err := p.Conn.Write(msg.Serialize()); err != nil {
+		p.SetGood(false)
+		return err
+	}
+
+	fmt.Println("----------------------------------- sent bif filed", p.ID())
+	return nil
 }
 
 func (p *Peer) PeerGoRotine(wg *sync.WaitGroup) {
@@ -403,12 +430,19 @@ func (p *Peer) PeerGoRotine(wg *sync.WaitGroup) {
 	if resp == nil {
 		return
 	}
+
 	if !p.ValidHandShake(handShake, resp) {
 		return
 	}
-	// here we will start a gorotine for reading peer messages
 
-	p.Intersted()
+	// here we will start a gorotine for reading peer messages
+	if err := p.SendBitField(); err != nil {
+		fmt.Println("errror setting bitfield", err)
+	}
+
+	if err := p.Intersted(); err != nil {
+		fmt.Println("errror sending interest", err)
+	}
 
 	other.Add(2)
 	go p.PeerMesgs(&other)
@@ -416,17 +450,16 @@ func (p *Peer) PeerGoRotine(wg *sync.WaitGroup) {
 
 	for piece := range p.PieceWorkRecvChan {
 
-		if !p.IsGood(){
+		if !p.IsGood() {
 			p.PieceWorkRecvChan <- piece
 			return
 		}
 
 		if !p.HasPiece(piece.Index) || !p.PeerIsChoking() {
 			p.PieceWorkRecvChan <- piece
-			time.Sleep(500 * time.Millisecond)
+			time.Sleep(100 * time.Millisecond)
 			continue
 		}
-		fmt.Println("current peer has piece", piece.Index, p.ID())
 		piecesChan := make(chan uint32, piece.NPiece+1)
 
 		for begin := uint32(0); begin < piece.Size; begin += piece.BlockSize {
@@ -435,12 +468,12 @@ func (p *Peer) PeerGoRotine(wg *sync.WaitGroup) {
 
 		p.SetCurrentPiece(piece)
 		timeoutTicker := time.NewTicker(3 * time.Second)
-        defer timeoutTicker.Stop()
+		defer timeoutTicker.Stop()
 
-		limit := time.Now().Add(3 * time.Second)
+		limit := time.Now().Add(5 * time.Second)
 		lastDownload := piece.GetDownloaded()
 		for !piece.Done() && p.IsGood() {
-			
+
 			select {
 			case begin := <-piecesChan:
 				if piece.IsThisDone(begin) {
@@ -448,7 +481,7 @@ func (p *Peer) PeerGoRotine(wg *sync.WaitGroup) {
 				}
 				if !p.CanSendMessage() || !p.PeerIsChoking() {
 					piecesChan <- begin
-					time.Sleep(200 * time.Millisecond)
+					time.Sleep(100 * time.Millisecond)
 					continue
 				}
 
@@ -458,19 +491,17 @@ func (p *Peer) PeerGoRotine(wg *sync.WaitGroup) {
 				}
 				p.Request(piece.Index, begin, length)
 				p.SentMessage()
-			case <- timeoutTicker.C:
+			case <-timeoutTicker.C:
 				piece.PrintState()
 				if time.Until(limit) < 0 {
-					if lastDownload == piece.GetDownloaded(){
+					if lastDownload == piece.GetDownloaded() {
 						p.SetGood(false)
 						break
-					}else{
-						limit = time.Now().Add(3 * time.Second)
+					} else {
+						limit = time.Now().Add(5 * time.Second)
 						lastDownload = piece.GetDownloaded()
 					}
 				}
-
-				time.Sleep(500 * time.Millisecond)
 			}
 		}
 		if piece.Done() {
@@ -543,15 +574,15 @@ func (p *Peer) PeerMesgs(wg *sync.WaitGroup) {
 			}
 			if p.CurPiece != nil {
 				p.CurPiece.SetPiece(index, buf, begin)
-				p.RecivedBytes(p.CurPiece.Size)
+				p.RecivedBytes(uint32(len(buf)))
 			}
 		case MsgRequest:
-			if !p.IsInterested() || p.ChokeUploadStatus(){
+			fmt.Println("--------------------received a messag request --------------------")
+			if !p.IsInterested() || p.ChokeUploadStatus() {
 				continue
 			}
-			fmt.Println("--------------------received a messag request --------------------")
 			index, begin, length, ok := m.ParseRequest()
-			if !ok{
+			if !ok {
 				fmt.Println("request isn't good")
 				continue
 			}
@@ -565,25 +596,26 @@ func (p *Peer) PeerMesgs(wg *sync.WaitGroup) {
 			// here we need to send the piece
 
 		case MsgInterested:
+			fmt.Println("-------------------- Peer is interested")
 			p.InterestedStatus(true)
+		case MsgNotInterested:
+			fmt.Println("--------------------- Peer is not interested")
+			p.InterestedStatus(false)
 		}
 	}
 	// here we will be waiting for peer messages
 }
 
-
-
-
 // Clear function to free all resources allocated
 func (p *Peer) Clear() {
-	p.Mu.Lock()
+	p.PeerMutex.Lock()
 	p.valid = false
 	// close(p.PieceWorkRecvChan)
 	// close(p.PieceWorkResChan)
 	if p.Conn != nil {
 		p.Conn.Close()
 	}
-	p.Mu.Unlock()
+	p.PeerMutex.Unlock()
 }
 
 func (p *Peer) SetBitField(bitfield []byte) {

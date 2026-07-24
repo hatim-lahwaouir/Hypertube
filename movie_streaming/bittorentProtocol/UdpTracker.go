@@ -15,12 +15,13 @@ type UdpTracker struct {
 	Host         string
 	ConnectionId int64
 	IsGood       bool
+	lastTime    time.Time
 }
 
-func NewUdpTracker(trackerUrl string) UdpTracker {
+func NewUdpTracker(trackerUrl string) *UdpTracker {
 	endpoint, _ := url.Parse(trackerUrl)
 
-	return UdpTracker{Scheme: endpoint.Scheme, Host: endpoint.Host}
+	return &UdpTracker{Scheme: endpoint.Scheme, Host: endpoint.Host}
 }
 
 func (u *UdpTracker) GetConnectionId() {
@@ -29,7 +30,14 @@ func (u *UdpTracker) GetConnectionId() {
 		resp     []byte
 		connResp ConnectionResp
 	)
-
+	if u.lastTime.IsZero(){
+		u.lastTime = time.Now()
+	}
+	if time.Until(u.lastTime.Add(2 * time.Minute)) < 0 {
+		return
+	}
+	u.lastTime = time.Now()
+	
 	conn, err := net.DialTimeout(u.Scheme, u.Host, 1*time.Second)
 
 	if err != nil {
@@ -96,11 +104,11 @@ func (u *UdpTracker) NewAnnounceRequest(state *CurrentState) *AnnounceRequest {
 	}
 }
 
-func (u *UdpTracker) GetPeers(state *CurrentState) []Peer {
+func (u *UdpTracker) GetPeers(state *CurrentState) []*Peer {
 	var (
 		resp []byte
 	)
-	if u.IsGood == false {
+	if !u.IsGood  {
 		return nil
 	}
 

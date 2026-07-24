@@ -50,6 +50,10 @@ func (f *File) Create() error {
 	return nil
 }
 
+func (f *File) Clear() {
+	f.FD.Close()
+}
+
 func (f *File) Done() bool {
 	done := f.BytesWritten >= f.Size
 
