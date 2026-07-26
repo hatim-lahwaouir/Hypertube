@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"net"
 	"net/url"
+	"sync"
 	"time"
 )
 
@@ -18,11 +19,87 @@ type UdpTracker struct {
 	lastTime    time.Time
 }
 
+
+type UdpTrackers struct {
+	trackers []*UdpTracker
+	peerResult []*Peer
+}
+
+
+
+func NewUdpTrackers(UdpTracker []*UdpTracker) *UdpTrackers {
+
+	return &UdpTrackers{trackers: UdpTracker}
+}
+
+
 func NewUdpTracker(trackerUrl string) *UdpTracker {
 	endpoint, _ := url.Parse(trackerUrl)
 
 	return &UdpTracker{Scheme: endpoint.Scheme, Host: endpoint.Host}
 }
+
+
+
+func (u *UdpTrackers) GetPeers(cur *CurrentState) []*Peer {
+    var (
+
+        waitGetUdpPeers sync.WaitGroup
+        waitWorkersUdpPeers sync.WaitGroup
+        peerRes chan []*Peer
+        recv chan *UdpTracker
+        n_gorotines int
+    )
+	u.peerResult = nil
+    n_gorotines = 5
+
+	
+    recv = make(chan *UdpTracker, 50)
+    peerRes = make(chan []*Peer, 100)
+
+
+
+	// lanch gorotines that each one will get some peers from udp trackesr and store them in peerRes chanel 
+	for i := 0; i < n_gorotines; i += 1 {
+        waitWorkersUdpPeers.Add(1)
+        go getUdpPeersWorker(recv, peerRes,cur , &waitWorkersUdpPeers)
+    }
+    waitGetUdpPeers.Add(1)
+    go u.storePeersFromUdpTracker(peerRes, &waitGetUdpPeers)
+	for _, udptracker := range u.trackers {
+        recv <- udptracker
+	}
+    close(recv)
+    waitWorkersUdpPeers.Wait()
+    close(peerRes)
+    waitGetUdpPeers.Wait()
+
+	return u.peerResult
+}
+
+
+func getUdpPeersWorker(recv chan *UdpTracker, res chan []*Peer,  cur *CurrentState ,wg *sync.WaitGroup) {
+   
+
+   defer wg.Done()
+
+   for  tr := range(recv) {
+        tr.GetConnectionId()
+        p := tr.GetPeers(cur)
+        res <- p
+   }
+}
+
+func (u *UdpTrackers) storePeersFromUdpTracker(res chan []*Peer, wg *sync.WaitGroup) {
+
+	defer wg.Done()
+    
+    for p := range(res) {
+        u.peerResult = append(u.peerResult, p...)
+    }
+}
+
+
 
 func (u *UdpTracker) GetConnectionId() {
 	var (
@@ -45,7 +122,7 @@ func (u *UdpTracker) GetConnectionId() {
 		return
 	}
 	defer conn.Close()
-	if err := conn.SetDeadline(time.Now().Add(6 * time.Second)); err != nil {
+	if err := conn.SetDeadline(time.Now().Add(3 * time.Second)); err != nil {
 		fmt.Println("errror setting dead line  ", err.Error())
 		return
 	}
@@ -126,7 +203,7 @@ func (u *UdpTracker) GetPeers(state *CurrentState) []*Peer {
 		fmt.Println("errror writing to the packet ", err.Error())
 		return nil
 	}
-	if err := conn.SetDeadline(time.Now().Add(6 * time.Second)); err != nil {
+	if err := conn.SetDeadline(time.Now().Add(3 * time.Second)); err != nil {
 		fmt.Println("errror setting dead line  ", err.Error())
 		return nil
 	}

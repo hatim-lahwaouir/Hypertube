@@ -32,6 +32,7 @@ type Peer struct {
 	ClientID     [20]byte
 
 	PieceWorkRecvChan chan *PieceWork
+	FailledPiece chan *PieceWork
 	PieceWorkResChan  chan *PieceWork
 	Started           bool
 	BroadCastMsg      chan []byte
@@ -66,9 +67,14 @@ func (p *Peer) ResetBytesReceived() {
 }
 
 func (p *Peer) UnChokePeer(status bool) {
+	if !p.IsGood(){
+		return
+	}
 
 	p.ConnMutext.Lock()
 	defer p.ConnMutext.Unlock()
+
+
 
 	if p.ChokeUploadStatus() == !status {
 		return
@@ -118,9 +124,10 @@ func (p *Peer) IsInterested() bool {
 	return p.Interested
 }
 
-func (p *Peer) SetChannel(PieceWorkRecvChan chan *PieceWork, PieceWorkResChan chan *PieceWork) {
-	p.PieceWorkRecvChan = PieceWorkRecvChan
+func (p *Peer) SetChannel(FailledPiece chan *PieceWork, PieceWorkResChan chan *PieceWork) {
+	p.FailledPiece = FailledPiece
 	p.PieceWorkResChan = PieceWorkResChan
+	p.PieceWorkRecvChan = make(chan *PieceWork, 1)
 }
 
 func (p *Peer) SentMessage() {
@@ -219,12 +226,12 @@ func NewPeers(resp []byte, n int) []*Peer {
 }
 
 func (p *Peer) Connect() {
+	p.SetGood(true)
 	conn, err := net.DialTimeout("tcp", p.IP.String()+":"+strconv.FormatUint(uint64(p.Port), 10), 5*time.Second)
 	if err != nil {
 		p.SetGood(false)
 		return
 	}
-	p.valid = true
 	p.Conn = conn
 }
 
@@ -435,6 +442,8 @@ func (p *Peer) PeerGoRotine(wg *sync.WaitGroup) {
 		return
 	}
 
+	fmt.Println("Hello from", p.ID())
+
 	// here we will start a gorotine for reading peer messages
 	if err := p.SendBitField(); err != nil {
 		fmt.Println("errror setting bitfield", err)
@@ -449,14 +458,13 @@ func (p *Peer) PeerGoRotine(wg *sync.WaitGroup) {
 	go p.Broadcast(&other)
 
 	for piece := range p.PieceWorkRecvChan {
-
 		if !p.IsGood() {
-			p.PieceWorkRecvChan <- piece
+			p.FailledPiece <- piece
 			return
 		}
 
 		if !p.HasPiece(piece.Index) || !p.PeerIsChoking() {
-			p.PieceWorkRecvChan <- piece
+			p.FailledPiece <- piece
 			time.Sleep(100 * time.Millisecond)
 			continue
 		}
@@ -468,20 +476,24 @@ func (p *Peer) PeerGoRotine(wg *sync.WaitGroup) {
 
 		p.SetCurrentPiece(piece)
 		timeoutTicker := time.NewTicker(3 * time.Second)
-		defer timeoutTicker.Stop()
 
-		limit := time.Now().Add(5 * time.Second)
 		lastDownload := piece.GetDownloaded()
-		for !piece.Done() && p.IsGood() {
+		stop := false
+		for !piece.Done() && p.IsGood() && !stop {
 
 			select {
 			case begin := <-piecesChan:
 				if piece.IsThisDone(begin) {
 					continue
 				}
-				if !p.CanSendMessage() || !p.PeerIsChoking() {
+				if !p.PeerIsChoking(){
+					p.FailledPiece <- piece
+					stop = true
+					continue
+				}
+				if !p.CanSendMessage(){
 					piecesChan <- begin
-					time.Sleep(100 * time.Millisecond)
+					time.Sleep(1 * time.Millisecond)
 					continue
 				}
 
@@ -493,28 +505,23 @@ func (p *Peer) PeerGoRotine(wg *sync.WaitGroup) {
 				p.SentMessage()
 			case <-timeoutTicker.C:
 				piece.PrintState()
-				if time.Until(limit) < 0 {
-					if lastDownload == piece.GetDownloaded() {
-						p.SetGood(false)
-						break
-					} else {
-						limit = time.Now().Add(5 * time.Second)
+				if lastDownload + 90000 >  piece.GetDownloaded() {
+					stop = true
+				} else {
 						lastDownload = piece.GetDownloaded()
-					}
 				}
 			}
 		}
+
+		timeoutTicker.Stop()
 		if piece.Done() {
 			p.PieceWorkResChan <- piece
 		} else {
-			p.SetCurrentPiece(nil)
-			close(piecesChan)
-			fmt.Println("peer time outed", p.ID())
-			p.Clear()
-			p.PieceWorkRecvChan <- piece
-			return
+			p.FailledPiece <- piece
 		}
+
 		p.SetCurrentPiece(nil)
+		close(piecesChan)
 	}
 }
 
@@ -612,9 +619,14 @@ func (p *Peer) Clear() {
 	p.valid = false
 	// close(p.PieceWorkRecvChan)
 	// close(p.PieceWorkResChan)
+
+	p.ConnMutext.Lock()
+
 	if p.Conn != nil {
 		p.Conn.Close()
 	}
+	p.ConnMutext.Unlock()
+	close(p.PieceWorkRecvChan)
 	p.PeerMutex.Unlock()
 }
 

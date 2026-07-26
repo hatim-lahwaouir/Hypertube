@@ -68,6 +68,6 @@ func (f *File) IsCreated() bool {
 }
 
 func (f *File) WriteData(offset int64,buf []byte) error {
-	f.FD.WriteAt(buf, offset)
-	return nil
+	_, err := f.FD.WriteAt(buf, offset)
+	return err
 }
