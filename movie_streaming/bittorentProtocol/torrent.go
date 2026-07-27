@@ -1,8 +1,11 @@
 package bittorentProtocol
 
 import (
-	bencode "github.com/jackpal/bencode-go"
+	"bytes"
+	"crypto/sha1"
 	"io"
+
+	bencode "github.com/jackpal/bencode-go"
 )
 
 type TrackerAction int32
@@ -35,12 +38,24 @@ type TorrentFile struct {
 }
 
 func NewTorrent(r io.Reader) (*TorrentFile, error) {
-	var (
-		t TorrentFile
-	)
-	err := bencode.Unmarshal(r, &t)
+    var t TorrentFile
+    
+    err := bencode.Unmarshal(r, &t)
+    if err != nil {
+        return nil, err
+    }
 
-	return &t, err
+    var buf bytes.Buffer
+    err = bencode.Marshal(&buf, t.Info)
+    if err != nil {
+        return nil, err
+    }
+
+    hash := sha1.Sum(buf.Bytes())
+    
+    t.InfoHash = hash[:]
+
+    return &t, nil
 }
 
 func (t *TorrentFile) CalculateLength() int64 {

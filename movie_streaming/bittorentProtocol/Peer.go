@@ -5,7 +5,7 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-
+   "sync/atomic"
 	// "fmt"
 	"net"
 	"os"
@@ -19,16 +19,16 @@ type Peer struct {
 	Port        uint16
 	Conn        net.Conn
 	BitField    []byte
-	valid       bool
-	UnChoke     bool
+	valid       atomic.Bool
+	UnChoke     atomic.Bool
 	PacketSent  int
-	ChokeUpload bool
+	ChokeUpload atomic.Bool
 
 	InfoHash [20]byte
 
 	PeerMutex    sync.Mutex
 	ConnMutext   sync.Mutex
-	MessagesSent int
+	MessagesSent atomic.Int32
 	ClientID     [20]byte
 
 	PieceWorkRecvChan chan *PieceWork
@@ -38,9 +38,9 @@ type Peer struct {
 	BroadCastMsg      chan []byte
 
 	CurPiece     *PieceWork
-	Interested   bool
-	BytesRecived uint32
-	fileUpload   []*FileUploads
+	Interested   atomic.Bool
+	BytesRecived atomic.Uint32
+	PieceDone   chan bool
 	HasBitField  bool
 
 	ServerBitField []byte
@@ -50,20 +50,14 @@ func (p *Peer) SetUpServerBitField(b []byte) {
 	p.ServerBitField = b
 }
 
-func (p *Peer) SetUpFileUploads(fileUpload []*FileUploads) {
-	p.fileUpload = fileUpload
-}
+
 
 func (p *Peer) RecivedBytes(n uint32) {
-	p.PeerMutex.Lock()
-	defer p.PeerMutex.Unlock()
-	p.BytesRecived += n
+	p.BytesRecived.Add(n)
 }
 
 func (p *Peer) ResetBytesReceived() {
-	p.PeerMutex.Lock()
-	defer p.PeerMutex.Unlock()
-	p.BytesRecived = 0
+	p.BytesRecived.Store(0)
 }
 
 func (p *Peer) UnChokePeer(status bool) {
@@ -95,79 +89,55 @@ func (p *Peer) UnChokePeer(status bool) {
 }
 
 func (p *Peer) ChokeUploadStatus() bool {
-	p.PeerMutex.Lock()
-	defer p.PeerMutex.Unlock()
-	return p.ChokeUpload
+	return p.ChokeUpload.Load()
 }
 
 func (p *Peer) UpdateChokeUpload(status bool) {
-	p.PeerMutex.Lock()
-	defer p.PeerMutex.Unlock()
-	p.ChokeUpload = status
+	p.ChokeUpload.Store(status)
 }
 
 func (p *Peer) GetBytesReceived() uint32 {
-	p.PeerMutex.Lock()
-	defer p.PeerMutex.Unlock()
-	return p.BytesRecived
+	return p.BytesRecived.Load()
 }
 
 func (p *Peer) InterestedStatus(status bool) {
-	p.PeerMutex.Lock()
-	defer p.PeerMutex.Unlock()
-	p.Interested = status
+	p.Interested.Store(status)
 }
 
 func (p *Peer) IsInterested() bool {
-	p.PeerMutex.Lock()
-	defer p.PeerMutex.Unlock()
-	return p.Interested
+	return p.Interested.Load()
 }
 
 func (p *Peer) SetChannel(FailledPiece chan *PieceWork, PieceWorkResChan chan *PieceWork) {
 	p.FailledPiece = FailledPiece
 	p.PieceWorkResChan = PieceWorkResChan
 	p.PieceWorkRecvChan = make(chan *PieceWork, 1)
+	p.PieceDone = make(chan bool)
 }
 
 func (p *Peer) SentMessage() {
-	p.PeerMutex.Lock()
-	p.MessagesSent += 1
-	p.PeerMutex.Unlock()
+	p.MessagesSent.Add(1)
 }
 
 func (p *Peer) ReceivedMessage() {
-	p.PeerMutex.Lock()
-	p.MessagesSent -= 1
-	if p.MessagesSent < 0 {
-		p.MessagesSent = 0
+	p.MessagesSent.Add(-1)
+	if p.MessagesSent.Load() < 0 {
+		p.MessagesSent.Store(0)
 	}
-	p.PeerMutex.Unlock()
 }
 
 func (p *Peer) CanSendMessage() bool {
-	p.PeerMutex.Lock()
-	defer p.PeerMutex.Unlock()
 
-	return p.MessagesSent < 32
+	return p.MessagesSent.Load() < 32
 }
 
-func (p *Peer) GetMessageSent() int {
-	p.PeerMutex.Lock()
-	defer p.PeerMutex.Unlock()
-	return p.MessagesSent
-}
 
 func (p *Peer) SetGood(b bool) {
-	p.PeerMutex.Lock()
-	p.valid = b
-	p.PeerMutex.Unlock()
+	p.valid.Store(b)
 }
 
 func (p *Peer) IsGood() bool {
-	p.PeerMutex.Lock()
-	defer p.PeerMutex.Unlock()
-	return p.valid
+	return p.valid.Load()
 }
 
 func (p *Peer) ID() string {
@@ -219,7 +189,7 @@ func NewPeers(resp []byte, n int) []*Peer {
 		port := binary.BigEndian.Uint16(portBytes)
 		ip := net.IP(ipBytes)
 
-		peers = append(peers, &Peer{IP: ip, Port: port, valid: true})
+		peers = append(peers, &Peer{IP: ip, Port: port, valid: atomic.Bool{}})
 	}
 
 	return peers
@@ -243,14 +213,14 @@ func (p *Peer) PeerHandShake(h *HandShake) []byte {
 
 	rawBytes := h.Serialize()
 
-	p.Conn.SetWriteDeadline(time.Now().Add(time.Second * 15))
+	p.Conn.SetWriteDeadline(time.Now().Add(time.Second * 5))
 	if _, err := p.Conn.Write(rawBytes); err != nil {
 		p.SetGood(false)
 		return nil
 	}
 	resp := make([]byte, 68)
 
-	p.Conn.SetReadDeadline(time.Now().Add(time.Second * 15))
+	p.Conn.SetReadDeadline(time.Now().Add(time.Second * 5))
 	_, err := p.Conn.Read(resp)
 	if err != nil {
 		p.SetGood(false)
@@ -282,7 +252,7 @@ func (p *Peer) GetMessage() (*Msg, error) {
 		return nil, nil
 	}
 
-	p.Conn.SetDeadline(time.Now().Add(time.Second * 15))
+	p.Conn.SetDeadline(time.Now().Add(time.Second * 5))
 	m, err := NewMessage(p.Conn)
 	if err != nil {
 		if errors.Is(err, os.ErrDeadlineExceeded) {
@@ -301,7 +271,7 @@ func (p *Peer) Intersted() error {
 
 	p.ConnMutext.Lock()
 	defer p.ConnMutext.Unlock()
-	p.Conn.SetWriteDeadline(time.Now().Add(time.Second * 15))
+	p.Conn.SetWriteDeadline(time.Now().Add(time.Second * 5))
 	m := Msg{ID: MsgInterested}
 	data := m.Serialize()
 	if _, err := p.Conn.Write(data); err != nil {
@@ -313,7 +283,7 @@ func (p *Peer) Intersted() error {
 }
 
 func (p *Peer) Request(cur uint32, base uint32, length uint32) error {
-	if !p.IsGood() || !p.UnChoke {
+	if !p.IsGood() || !p.UnChoke.Load() {
 		return errors.New("invalid Peer")
 	}
 	buf := make([]byte, 17)
@@ -331,7 +301,7 @@ func (p *Peer) Request(cur uint32, base uint32, length uint32) error {
 	p.ConnMutext.Lock()
 	defer p.ConnMutext.Unlock()
 
-	p.Conn.SetWriteDeadline(time.Now().Add(time.Second * 15))
+	p.Conn.SetWriteDeadline(time.Now().Add(time.Second * 5))
 	if _, err := p.Conn.Write(buf); err != nil {
 		p.SetGood(false)
 		return err
@@ -357,7 +327,7 @@ func (p *Peer) SendPiece(index uint32, begin uint32, piece []byte) error {
 	p.ConnMutext.Lock()
 	defer p.ConnMutext.Unlock()
 
-	p.Conn.SetWriteDeadline(time.Now().Add(time.Second * 15))
+	p.Conn.SetWriteDeadline(time.Now().Add(time.Second * 5))
 	if _, err := p.Conn.Write(buf); err != nil {
 		p.SetGood(false)
 		return err
@@ -382,7 +352,7 @@ func (p *Peer) Broadcast(wg *sync.WaitGroup) {
 
 	for msg := range p.BroadCastMsg {
 		p.ConnMutext.Lock()
-		p.Conn.SetWriteDeadline(time.Now().Add(time.Second * 15))
+		p.Conn.SetWriteDeadline(time.Now().Add(time.Second * 5))
 		if _, err := p.Conn.Write(msg); err != nil {
 			p.SetGood(false)
 			p.ConnMutext.Unlock()
@@ -409,13 +379,12 @@ func (p *Peer) SendBitField() error {
 	p.ConnMutext.Lock()
 	defer p.ConnMutext.Unlock()
 
-	p.Conn.SetWriteDeadline(time.Now().Add(time.Second * 15))
+	p.Conn.SetWriteDeadline(time.Now().Add(time.Second * 5))
 	if _, err := p.Conn.Write(msg.Serialize()); err != nil {
 		p.SetGood(false)
 		return err
 	}
 
-	fmt.Println("----------------------------------- sent bif filed", p.ID())
 	return nil
 }
 
@@ -424,7 +393,7 @@ func (p *Peer) PeerGoRotine(wg *sync.WaitGroup) {
 	var (
 		other sync.WaitGroup
 	)
-	defer other.Wait()
+
 
 	p.Connect()
 	if !p.IsGood() {
@@ -442,7 +411,6 @@ func (p *Peer) PeerGoRotine(wg *sync.WaitGroup) {
 		return
 	}
 
-	fmt.Println("Hello from", p.ID())
 
 	// here we will start a gorotine for reading peer messages
 	if err := p.SendBitField(); err != nil {
@@ -460,12 +428,11 @@ func (p *Peer) PeerGoRotine(wg *sync.WaitGroup) {
 	for piece := range p.PieceWorkRecvChan {
 		if !p.IsGood() {
 			p.FailledPiece <- piece
-			return
+			break
 		}
 
-		if !p.HasPiece(piece.Index) || !p.PeerIsChoking() {
+		if !p.HasPiece(piece.Index) || p.PeerIsChoking() {
 			p.FailledPiece <- piece
-			time.Sleep(100 * time.Millisecond)
 			continue
 		}
 		piecesChan := make(chan uint32, piece.NPiece+1)
@@ -479,21 +446,20 @@ func (p *Peer) PeerGoRotine(wg *sync.WaitGroup) {
 
 		lastDownload := piece.GetDownloaded()
 		stop := false
-		for !piece.Done() && p.IsGood() && !stop {
+		for p.IsGood() && !stop {
 
 			select {
 			case begin := <-piecesChan:
 				if piece.IsThisDone(begin) {
 					continue
 				}
-				if !p.PeerIsChoking(){
-					p.FailledPiece <- piece
+				if p.PeerIsChoking(){
 					stop = true
 					continue
 				}
 				if !p.CanSendMessage(){
 					piecesChan <- begin
-					time.Sleep(1 * time.Millisecond)
+					time.Sleep(30 * time.Millisecond)
 					continue
 				}
 
@@ -504,41 +470,49 @@ func (p *Peer) PeerGoRotine(wg *sync.WaitGroup) {
 				p.Request(piece.Index, begin, length)
 				p.SentMessage()
 			case <-timeoutTicker.C:
-				piece.PrintState()
-				if lastDownload + 90000 >  piece.GetDownloaded() {
+				if piece.Done(){
+					continue
+				}
+				if lastDownload + 450000 >  piece.GetDownloaded() {
 					stop = true
+					p.SetGood(false)
 				} else {
 						lastDownload = piece.GetDownloaded()
 				}
+			case <- p.PieceDone:
+				stop = true
 			}
 		}
 
-		timeoutTicker.Stop()
-		if piece.Done() {
-			p.PieceWorkResChan <- piece
-		} else {
+
+
+		if !piece.Done(){
 			p.FailledPiece <- piece
+		} else{
+			p.PieceWorkResChan <- piece
 		}
+		timeoutTicker.Stop()
 
 		p.SetCurrentPiece(nil)
 		close(piecesChan)
+		
+		if !p.IsGood() {
+				break
+		}
 	}
+
+	close(p.BroadCastMsg)
+	other.Wait()
+
 }
 
 func (p *Peer) PeerChokingState(state bool) {
 
-	p.PeerMutex.Lock()
-	defer p.PeerMutex.Unlock()
-
-	p.UnChoke = state
+	p.UnChoke.Store(state)
 }
 
 func (p *Peer) PeerIsChoking() bool {
-
-	p.PeerMutex.Lock()
-	defer p.PeerMutex.Unlock()
-
-	return p.UnChoke
+	return !p.UnChoke.Load()
 }
 
 func (p *Peer) PeerMesgs(wg *sync.WaitGroup) {
@@ -548,12 +522,12 @@ func (p *Peer) PeerMesgs(wg *sync.WaitGroup) {
 	}
 	for {
 		if !p.IsGood() {
-			return
+			break
 		}
 		m, err := p.GetMessage()
 		if err != nil {
 			p.SetGood(false)
-			return
+			break
 		}
 
 		if m == nil {
@@ -579,35 +553,16 @@ func (p *Peer) PeerMesgs(wg *sync.WaitGroup) {
 			if !ok {
 				continue
 			}
+			
+			p.PeerMutex.Lock()
 			if p.CurPiece != nil {
 				p.CurPiece.SetPiece(index, buf, begin)
 				p.RecivedBytes(uint32(len(buf)))
+				if p.CurPiece.Done(){
+					p.PieceDone <- true
+				}
 			}
-		case MsgRequest:
-			fmt.Println("--------------------received a messag request --------------------")
-			if !p.IsInterested() || p.ChokeUploadStatus() {
-				continue
-			}
-			index, begin, length, ok := m.ParseRequest()
-			if !ok {
-				fmt.Println("request isn't good")
-				continue
-			}
-			piece, err := GetCurrentPiece(index, begin, length, p.fileUpload)
-			if err != nil {
-				continue
-			}
-			if err := p.SendPiece(index, begin, piece); err != nil {
-				fmt.Println("error sending piece")
-			}
-			// here we need to send the piece
-
-		case MsgInterested:
-			fmt.Println("-------------------- Peer is interested")
-			p.InterestedStatus(true)
-		case MsgNotInterested:
-			fmt.Println("--------------------- Peer is not interested")
-			p.InterestedStatus(false)
+			p.PeerMutex.Unlock()
 		}
 	}
 	// here we will be waiting for peer messages
@@ -615,8 +570,7 @@ func (p *Peer) PeerMesgs(wg *sync.WaitGroup) {
 
 // Clear function to free all resources allocated
 func (p *Peer) Clear() {
-	p.PeerMutex.Lock()
-	p.valid = false
+	p.valid.Store(false)
 	// close(p.PieceWorkRecvChan)
 	// close(p.PieceWorkResChan)
 
@@ -625,9 +579,10 @@ func (p *Peer) Clear() {
 	if p.Conn != nil {
 		p.Conn.Close()
 	}
+
+	close(p.PieceDone)
 	p.ConnMutext.Unlock()
 	close(p.PieceWorkRecvChan)
-	p.PeerMutex.Unlock()
 }
 
 func (p *Peer) SetBitField(bitfield []byte) {
@@ -643,3 +598,4 @@ func (p *Peer) InitBitField(size int) {
 	p.BitField = make([]byte, size)
 	//copy(p.BitField, bitfield)
 }
+

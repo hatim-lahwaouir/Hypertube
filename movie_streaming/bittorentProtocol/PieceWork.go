@@ -5,11 +5,13 @@ import (
 	"crypto/sha1"
 	"fmt"
 	"sync"
+	"sync/atomic"
+	"time"
 )
 
 type PieceWork struct {
 	Size            uint32
-	Downloaded      uint32
+	Downloaded      atomic.Uint32
 	Index           uint32
 	NPiece          uint32
 	Mu              sync.Mutex
@@ -18,6 +20,7 @@ type PieceWork struct {
 	PiecesState     []PieceState
 	Buffer          []byte
 	sha1            [20]byte
+	start 			time.Time
 }
 
 type PieceState uint8
@@ -36,6 +39,7 @@ func NewPieceWork(index uint32, size uint32, allPiecesSize uint32, expectedSha1 
 		BlockSize:       16384,
 		SizeOfAllPieces: allPiecesSize,
 		sha1:            expectedSha1,
+		start: time.Now(),
 	}
 
 	p.PiecesState = make([]PieceState, p.NPiece)
@@ -47,27 +51,15 @@ func NewPieceWork(index uint32, size uint32, allPiecesSize uint32, expectedSha1 
 }
 
 func (p *PieceWork) Done() bool {
-	p.Mu.Lock()
-	defer p.Mu.Unlock()
-	return p.Downloaded == p.Size
+	return p.Downloaded.Load() == p.Size
 }
 
 func (p *PieceWork) PrintState() {
-	p.Mu.Lock()
-	defer p.Mu.Unlock()
-	fmt.Printf("piece %d [%.2f%%/100%%]\n", p.Index, (float64(p.Downloaded)*100)/float64(p.Size))
+	fmt.Println(p.Index, "piece took ", time.Since(p.start))
 }
 
 func (p *PieceWork) PieceDone(pieceSize uint32) {
-	p.Mu.Lock()
-	defer p.Mu.Unlock()
-	p.Downloaded += pieceSize
-}
-
-func (p *PieceWork) Pending(begin uint32) {
-	p.Mu.Lock()
-	defer p.Mu.Unlock()
-	p.PiecesState[begin/p.BlockSize] = BlockStatePending
+	p.Downloaded.Add(pieceSize)
 }
 
 func (p *PieceWork) IsThisDone(begin uint32) bool {
@@ -96,7 +88,7 @@ func (p *PieceWork) SetPiece(indexOfPice uint32, buf []byte, begin uint32) {
 	copy(p.Buffer[begin:begin+uint32(len(buf))], buf)
 
 	p.PiecesState[stateIndex] = BlockStateCompleted
-	p.Downloaded += uint32(len(buf))
+	p.Downloaded.Add(uint32(len(buf))) 
 }
 
 
@@ -110,5 +102,6 @@ func (p *PieceWork) ValidateEntigrity() bool {
 
 
 func (p *PieceWork) GetDownloaded() uint32 {
-	return p.Downloaded
+
+	return p.Downloaded.Load()
 }

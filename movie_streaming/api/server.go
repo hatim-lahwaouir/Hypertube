@@ -35,7 +35,7 @@ func StartServer(server http.Server) error {
 	StreamingService := services.NewMovieStreamingService()
 	// handlers
 	movieHandler := handler.NewMovieHandler(downalodService)
-	movieStreamHandler := handler.NewMovieStreamingHandler(StreamingService, movieRep)
+	movieStreamHandler := handler.NewMovieStreamingHandler(StreamingService)
 
 	router := http.NewServeMux()
 

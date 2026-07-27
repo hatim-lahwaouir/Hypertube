@@ -1,14 +1,12 @@
 package services
 
 import (
-	"path/filepath"
-    "fmt"
-	"compress/gzip"
-	"encoding/hex"
-	"github.com/hatim-lahwaouir/Hypertube/movie_streaming/models"
-	bittorent "github.com/hatim-lahwaouir/Hypertube/movie_streaming/bittorentProtocol"
+	"fmt"
+	"io"
 	"os"
-    "sync"
+	"sync"
+
+	bittorent "github.com/hatim-lahwaouir/Hypertube/movie_streaming/bittorentProtocol"
 )
 
 type MovieStreamingService struct {
@@ -30,31 +28,11 @@ func NewMovieStreamingService() *MovieStreamingService {
 	return cacheMovieStreaming
 }
 
-func (ms *MovieStreamingService) ParseTorrent(torrent *models.Torrent) error {
-	filePath := filepath.Join(ms.TorrentPath, torrent.Path)
-
-	f, err := os.OpenFile(filePath, os.O_RDONLY, 0644)
+func (ms *MovieStreamingService) ParseTorrent(r io.Reader) error {
+	t, err := bittorent.NewTorrent(r)
 	if err != nil {
 		return err
 	}
-	defer f.Close()
-
-	gzipReader, err := gzip.NewReader(f)
-	if err != nil {
-		return err
-	}
-	defer gzipReader.Close()
-
-	t, err := bittorent.NewTorrent(gzipReader)
-	if err != nil {
-		return err
-	}
-
-	decodedByteArray, err := hex.DecodeString(torrent.Hash)
-	if err != nil {
-		return err
-	}
-	t.InfoHash = decodedByteArray
 	ts := NewTorrentStreaming("6881", t)
 
     ms.wg.Add(1)
