@@ -2,7 +2,7 @@ package api
 
 import (
 	"github.com/hatim-lahwaouir/Hypertube/movie_streaming/handler"
-	"github.com/hatim-lahwaouir/Hypertube/movie_streaming/models"
+	// "github.com/hatim-lahwaouir/Hypertube/movie_streaming/models"
 	"github.com/hatim-lahwaouir/Hypertube/movie_streaming/services"
 	"github.com/hatim-lahwaouir/Hypertube/movie_streaming/utils"
 	"github.com/joho/godotenv"
@@ -47,24 +47,24 @@ func StartServer(server http.Server) error {
 		log.Fatal("Error loading .env file")
 	}
 	// start db
-	db := models.StartDb()
+	// db := models.StartDb()
 
 	// models repositories
 
-	movieRep := models.NewMoviRepository(db)
+	// movieRep := models.NewMoviRepository(db)
 	//services
 
-	downalodService := services.NewDownloadMovieInfoService(movieRep)
+	// downalodService := services.NewDownloadMovieInfoService(movieRep)
 	StreamingService := services.NewMovieStreamingService()
 	// handlers
-	movieHandler := handler.NewMovieHandler(downalodService)
+	//movieHandler := handler.NewMovieHandler(downalodService)
 	movieStreamHandler := handler.NewMovieStreamingHandler(StreamingService)
 
 	router := http.NewServeMux()
 
-	log.Println("db up", db)
-	router.HandleFunc("POST /search-movies/{page}", utils.MakeHandler(movieHandler.MovieSuggestions))
-	router.HandleFunc("POST /search-movies-omdb/{page}", utils.MakeHandler(movieHandler.MovieSuggersionsOMDB))
+	// log.Println("db up", db)
+	// router.HandleFunc("POST /search-movies/{page}", utils.MakeHandler(movieHandler.MovieSuggestions))
+	// router.HandleFunc("POST /search-movies-omdb/{page}", utils.MakeHandler(movieHandler.MovieSuggersionsOMDB))
 
 	router.HandleFunc("POST /movie/", utils.MakeHandler(movieStreamHandler.Download))
 	router.HandleFunc("GET /movie/{infohash}", utils.MakeHandler(movieStreamHandler.StreamVideo))

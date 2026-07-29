@@ -13,12 +13,15 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            height: 100vh;
+            min-height: 100vh;
             margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
         }
         .video-container {
-            max-width: 800px;
-            width: 100%;
+            /* Increased max-width and set dynamic width */
+            width: 90vw;
+            max-width: 1200px;
             background: #000;
             border-radius: 8px;
             overflow: hidden;
@@ -27,6 +30,7 @@
         video {
             width: 100%;
             height: auto;
+            max-height: 80vh; /* Keeps player within screen height without clipping controls */
             display: block;
         }
     </style>
@@ -36,13 +40,8 @@
     <h2>BitTorrent Stream Testing</h2>
     
     <div class="video-container">
-        <!-- 
-            The controls attribute is required to show the play/pause/timeline. 
-            The crossOrigin attribute can help prevent CORS issues if you serve 
-            this HTML file from a different port than 8080 during development.
-        -->
         <video controls crossorigin="anonymous">
-            <source src="http://localhost:8080/movie/93935d4485cd09d45276fe1cea714605b1d4b09e" type="video/mp4">
+            <source src="http://localhost:8080/movie/7cef4fbc4fa1430e514d1efcc5e32db9d0741a85" type="video/mp4">
             Your browser does not support the video tag.
         </video>
     </div>

@@ -176,6 +176,7 @@ func (p *Peer) SetPiece(index uint32) {
 func NewPeers(resp []byte, n int) []*Peer {
 	var peers []*Peer
 
+	fmt.Println(len(resp), n)
 	peersBinary := resp[20:n]
 	peerSize := 6
 	numPeers := len(peersBinary) / peerSize

@@ -432,6 +432,10 @@ func (t *TorrentStreaming) SendPiece(piece *bittorent.PieceWork) bool {
 	defer t.PeersMutex.RUnlock()
 
 
+	if t.HasPiece(piece.Index){
+		return true
+	}
+
 	for i := range(t.Peers){
 		if !t.Peers[i].IsGood(){
 			continue
@@ -503,6 +507,12 @@ func (t *TorrentStreaming) MonitorPeers(wg *sync.WaitGroup){
 
 	start := time.Now()
 	windowPieces := t.CalculateTheWindow()
+
+	// install last 6 pieces
+	for i := t.LastPiece() - (8 * 5); i  <= t.LastPiece(); i++{
+		t.SendPiece(bittorent.NewPieceWork(uint32(i), uint32(t.PieceLength), uint32(t.Length), t.Pieces[i]))
+	}
+
 
 	for piecesDownloded < t.LastPiece() - t.FirstPiece() + 1{		
 	

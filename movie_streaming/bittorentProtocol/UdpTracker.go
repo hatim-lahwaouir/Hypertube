@@ -51,7 +51,7 @@ func (u *UdpTrackers) GetPeers(cur *CurrentState) []*Peer {
         n_gorotines int
     )
 	u.peerResult = nil
-    n_gorotines = 5
+    n_gorotines = 50
 
 	
     recv = make(chan *UdpTracker, 50)
@@ -216,7 +216,7 @@ func (u *UdpTracker) GetPeers(state *CurrentState) []*Peer {
 	}
 
 	if n < 20 {
-		fmt.Println("errror reading response ", err.Error())
+		fmt.Println("errror reading response ")
 		return nil
 	}
 
