@@ -27,7 +27,7 @@ type APIFunc func(http.ResponseWriter, *http.Request) error
 
 func WriteResp(w http.ResponseWriter, status int, v any) error {
 	w.WriteHeader(status)
-	w.Header().Set("content-Type", "application/json")
+	// w.Header().Set("content-Type", "application/json")
 	return json.NewEncoder(w).Encode(v)
 
 }

@@ -2,7 +2,6 @@ package models
 
 import (
 	"errors"
-	"fmt"
 	"github.com/hatim-lahwaouir/Hypertube/movie_streaming/dto"
 	"github.com/hatim-lahwaouir/Hypertube/movie_streaming/types"
 	"gorm.io/gorm"
@@ -100,7 +99,7 @@ func (m *MoviesRep) GetMovie(imdb_code string) (*Movie, bool, error) {
 		}
 	}
 
-	fmt.Println(">>>>>>>>>>>>>>>>", movie)
+
 	return &movie, true, nil
 }
 

@@ -1,5 +1,0 @@
-[x] we need to store seeder, peers, thumbnail, year of producation, rating
-[x] we need to filter movies by Genre, date, name
-[x] stroing movies in database
-[ ] we need to call api to get movie info
-[ ] add another source of movies info

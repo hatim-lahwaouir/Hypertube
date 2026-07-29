@@ -1,7 +1,6 @@
 package bittorentProtocol
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 )
@@ -21,15 +20,10 @@ func Newfile(ParentPath string , filePath string, size uint32, PieceSize int64, 
 }
 
 
-func (f *File) NewFileUploads() *FileUploads {
-	return &FileUploads{FilePath: f.FilePath, Size: f.Size, PieceSize: f.PieceSize}
-}
-
 
 func (f *File) Create() error {
 	// make sure fiest that all sub directories of the file are downloaded
 	dirPath := filepath.Dir(f.FilePath)
-	fmt.Println(">>>>>>>>>>>>>>>>", dirPath, f.FilePath)
 	err := os.MkdirAll(dirPath, 0755)
 	if err != nil {
 		return err
@@ -55,12 +49,7 @@ func (f *File) Clear() {
 }
 
 func (f *File) Done() bool {
-	done := f.BytesWritten >= f.Size
-
-	if done {
-		f.FD.Close()
-	}
-	return done
+	return f.BytesWritten >= f.Size
 }
 
 func (f *File) IsCreated() bool {
@@ -70,4 +59,11 @@ func (f *File) IsCreated() bool {
 func (f *File) WriteData(offset int64,buf []byte) error {
 	_, err := f.FD.WriteAt(buf, offset)
 	return err
+}
+
+
+func (f *File) Read(offset int64,len int ) ([]byte, error) {
+	buf := make([]byte, len)
+	_, err := f.FD.ReadAt(buf, offset)
+	return buf, err
 }

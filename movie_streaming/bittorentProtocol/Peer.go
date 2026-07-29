@@ -14,6 +14,8 @@ import (
 	"time"
 )
 
+
+
 type Peer struct {
 	IP          net.IP
 	Port        uint16
@@ -111,8 +113,8 @@ func (p *Peer) IsInterested() bool {
 func (p *Peer) SetChannel(FailledPiece chan *PieceWork, PieceWorkResChan chan *PieceWork) {
 	p.FailledPiece = FailledPiece
 	p.PieceWorkResChan = PieceWorkResChan
-	p.PieceWorkRecvChan = make(chan *PieceWork, 1)
-	p.PieceDone = make(chan bool)
+	p.PieceWorkRecvChan = make(chan *PieceWork, len(p.BitField))
+	p.PieceDone = make(chan bool, 1)
 }
 
 func (p *Peer) SentMessage() {
@@ -196,7 +198,6 @@ func NewPeers(resp []byte, n int) []*Peer {
 }
 
 func (p *Peer) Connect() {
-	p.SetGood(true)
 	conn, err := net.DialTimeout("tcp", p.IP.String()+":"+strconv.FormatUint(uint64(p.Port), 10), 5*time.Second)
 	if err != nil {
 		p.SetGood(false)
@@ -441,6 +442,7 @@ func (p *Peer) PeerGoRotine(wg *sync.WaitGroup) {
 			piecesChan <- begin
 		}
 
+		p.ResetBytesReceived()
 		p.SetCurrentPiece(piece)
 		timeoutTicker := time.NewTicker(3 * time.Second)
 
@@ -473,7 +475,7 @@ func (p *Peer) PeerGoRotine(wg *sync.WaitGroup) {
 				if piece.Done(){
 					continue
 				}
-				if lastDownload + 450000 >  piece.GetDownloaded() {
+				if lastDownload + 100000 >  piece.GetDownloaded() {
 					stop = true
 					p.SetGood(false)
 				} else {
@@ -488,6 +490,7 @@ func (p *Peer) PeerGoRotine(wg *sync.WaitGroup) {
 
 		if !piece.Done(){
 			p.FailledPiece <- piece
+
 		} else{
 			p.PieceWorkResChan <- piece
 		}
@@ -544,7 +547,7 @@ func (p *Peer) PeerMesgs(wg *sync.WaitGroup) {
 			}
 		case MsgBitfield:
 			if len(p.BitField) == len(m.Payload) {
-				p.SetBitField(m.Payload)
+				p.SetBitField(m.Payload) // 1MB 1GB -> 1000 + (7) / 8 Piece 
 			}
 		case MsgPiece:
 			p.ReceivedMessage()
@@ -554,15 +557,25 @@ func (p *Peer) PeerMesgs(wg *sync.WaitGroup) {
 				continue
 			}
 			
+
+			var piece *PieceWork = nil
 			p.PeerMutex.Lock()
 			if p.CurPiece != nil {
-				p.CurPiece.SetPiece(index, buf, begin)
-				p.RecivedBytes(uint32(len(buf)))
-				if p.CurPiece.Done(){
-					p.PieceDone <- true
-				}
+				piece = p.CurPiece
 			}
 			p.PeerMutex.Unlock()
+
+			if piece == nil {
+				continue
+			}
+			piece.SetPiece(index, buf, begin)
+			p.RecivedBytes(uint32(len(buf)))
+			if piece.Done(){
+				select {
+				case p.PieceDone <- true:
+				default:
+				}
+			}
 		}
 	}
 	// here we will be waiting for peer messages
@@ -571,18 +584,25 @@ func (p *Peer) PeerMesgs(wg *sync.WaitGroup) {
 // Clear function to free all resources allocated
 func (p *Peer) Clear() {
 	p.valid.Store(false)
-	// close(p.PieceWorkRecvChan)
-	// close(p.PieceWorkResChan)
+
 
 	p.ConnMutext.Lock()
 
 	if p.Conn != nil {
 		p.Conn.Close()
 	}
-
 	close(p.PieceDone)
 	p.ConnMutext.Unlock()
 	close(p.PieceWorkRecvChan)
+
+
+	for ;; {
+		val, ok := <- p.PieceWorkRecvChan
+		if !ok{
+			break
+		}
+		p.FailledPiece <- val
+	}
 }
 
 func (p *Peer) SetBitField(bitfield []byte) {

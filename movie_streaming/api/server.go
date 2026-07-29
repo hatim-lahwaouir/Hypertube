@@ -10,6 +10,29 @@ import (
 	"net/http"
 )
 
+func corsMiddleware(next http.Handler) http.Handler {
+    return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+        // Allow all origins for development
+        w.Header().Set("Access-Control-Allow-Origin", "*")
+        
+        // Allow specific methods
+        w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
+        
+        // IMPORTANT: "Range" must be allowed for video streaming to work via CORS!
+        w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, Authorization, Range")
+
+        // Intercept preflight OPTIONS requests
+        if r.Method == http.MethodOptions {
+            w.WriteHeader(http.StatusOK)
+            return
+        }
+
+        // Move to the next handler
+        next.ServeHTTP(w, r)
+    })
+}
+
+
 func NewServer(lAddr string) http.Server {
 	return http.Server{
 		Addr: lAddr,
@@ -40,13 +63,13 @@ func StartServer(server http.Server) error {
 	router := http.NewServeMux()
 
 	log.Println("db up", db)
-	router.HandleFunc("GET /movie/{imdb_code}", utils.MakeHandler(movieHandler.Hello))
 	router.HandleFunc("POST /search-movies/{page}", utils.MakeHandler(movieHandler.MovieSuggestions))
 	router.HandleFunc("POST /search-movies-omdb/{page}", utils.MakeHandler(movieHandler.MovieSuggersionsOMDB))
 
-	router.HandleFunc("POST /movie/{id}/{hash}", utils.MakeHandler(movieStreamHandler.Download))
+	router.HandleFunc("POST /movie/", utils.MakeHandler(movieStreamHandler.Download))
+	router.HandleFunc("GET /movie/{infohash}", utils.MakeHandler(movieStreamHandler.StreamVideo))
 
-	server.Handler = router
+	server.Handler = corsMiddleware(router)
 
 	return server.ListenAndServe()
 }

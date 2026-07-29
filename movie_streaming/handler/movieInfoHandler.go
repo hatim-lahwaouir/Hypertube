@@ -17,19 +17,6 @@ func NewMovieHandler(m *services.DownloadMovieInfoService) *Movie {
 	return &Movie{MovieInfoService: m}
 }
 
-func (m *Movie) Hello(w http.ResponseWriter, r *http.Request) error {
-
-	// download a specific movie
-	imdb_code := r.PathValue("imdb_code")
-
-	movie, err := m.MovieInfoService.DownloadMovieInfo(imdb_code)
-
-	if err != nil {
-		fmt.Println(err)
-		return utils.WriteResp(w, http.StatusNotFound, err.Error())
-	}
-	return utils.WriteResp(w, http.StatusCreated, movie)
-}
 
 func (m *Movie) MovieSuggestions(w http.ResponseWriter, r *http.Request) error {
 
