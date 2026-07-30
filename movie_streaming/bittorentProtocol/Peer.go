@@ -44,8 +44,8 @@ type Peer struct {
 	BytesRecived atomic.Uint32
 	PieceDone   chan bool
 	HasBitField  bool
-
 	ServerBitField []byte
+
 }
 
 func (p *Peer) SetUpServerBitField(b []byte) {
@@ -476,9 +476,8 @@ func (p *Peer) PeerGoRotine(wg *sync.WaitGroup) {
 				if piece.Done(){
 					continue
 				}
-				if lastDownload + 100000 >  piece.GetDownloaded() {
+				if lastDownload + 2000000 >  piece.GetDownloaded() {
 					stop = true
-					p.SetGood(false)
 				} else {
 						lastDownload = piece.GetDownloaded()
 				}
@@ -577,7 +576,14 @@ func (p *Peer) PeerMesgs(wg *sync.WaitGroup) {
 				default:
 				}
 			}
+		case MsgInterested:
+			fmt.Println("-------------------------send Interested ----------------------")
+			p.InterestedStatus(true)
+		case MsgRequest:
+			fmt.Println("-------------------------send request ----------------------")
+
 		}
+
 	}
 	// here we will be waiting for peer messages
 }

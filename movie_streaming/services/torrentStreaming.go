@@ -415,7 +415,7 @@ func (t *TorrentStreaming) GetUDPPeers(){
 
 
 func (t *TorrentStreaming) CalculateTheWindow() int64 {
-	targetWindowBytes := int64(35 * 1024 * 1024) 
+	targetWindowBytes := int64(10 * 1024 * 1024) 
     
     windowPieces := (targetWindowBytes + t.PieceLength - 1) / t.PieceLength
     if windowPieces < 1 {
@@ -472,6 +472,29 @@ func (t *TorrentStreaming) ClearResources(){
 
 
 
+func (t *TorrentStreaming) Praiority(w int64) int {
+	
+	inflight := 0
+	
+	for i := t.FirstPiece(); i < t.LastPiece(); i++ {
+		if int64(inflight) == w{
+			break
+		}
+		if !t.HasPiece(uint32(i)){
+			fmt.Println("Piece", i, "was requested ")
+			t.SendPiece(bittorent.NewPieceWork(uint32(i), uint32(t.PieceLength), uint32(t.Length), t.Pieces[i]))
+			inflight++
+		}
+
+	}
+
+	return inflight
+}
+
+
+
+
+
 func (t *TorrentStreaming) MonitorPeers(wg *sync.WaitGroup){
 
     var (
@@ -479,7 +502,7 @@ func (t *TorrentStreaming) MonitorPeers(wg *sync.WaitGroup){
         PeerWg sync.WaitGroup
 		
 		piecesDownloded int64
-		inflight int64
+		inflight int
 		failledPeices []*bittorent.PieceWork
 
     )
@@ -503,32 +526,39 @@ func (t *TorrentStreaming) MonitorPeers(wg *sync.WaitGroup){
 
 	piecesDownloded = 0
 	inflight = 0
-	nextPieceToRequest := t.FirstPiece()
+	// nextPieceToRequest := t.FirstPiece()
 
 	start := time.Now()
 	windowPieces := t.CalculateTheWindow()
 
-	// install last 6 pieces
-	for i := t.LastPiece() - (8 * 5); i  <= t.LastPiece(); i++{
-		t.SendPiece(bittorent.NewPieceWork(uint32(i), uint32(t.PieceLength), uint32(t.Length), t.Pieces[i]))
-	}
+	// // install always first 2 windows
+	// for  nextPieceToRequest  <= windowPieces * 2 {
+	// 	t.SendPiece(bittorent.NewPieceWork(uint32(nextPieceToRequest), uint32(t.PieceLength), uint32(t.Length), t.Pieces[nextPieceToRequest]))
+	// 	nextPieceToRequest++
+	// 	inflight++
+	// }
 
 
+	
 	for piecesDownloded < t.LastPiece() - t.FirstPiece() + 1{		
 	
-			if inflight == 0 {
-				for inflight < windowPieces && nextPieceToRequest <= t.LastPiece(){
-					t.SendPiece(bittorent.NewPieceWork(uint32(nextPieceToRequest), uint32(t.PieceLength), uint32(t.Length), t.Pieces[nextPieceToRequest]))
-					inflight++
-					nextPieceToRequest++
-				}
-			}
+			// for inflight < windowPieces && nextPieceToRequest <= t.LastPiece(){		
+			// 	if t.SendPiece(bittorent.NewPieceWork(uint32(nextPieceToRequest), uint32(t.PieceLength), uint32(t.Length), t.Pieces[nextPieceToRequest])){
+			// 			inflight++
+			// 	}
+			// 	nextPieceToRequest++
+			// }
 
+			fmt.Println("inflight", inflight)
+			if inflight == 0{
+				inflight = t.Praiority(windowPieces)
+			}
 			select{
 			case PieceRes := <- t.PieceWorkResChan:
 				if t.HasPiece(PieceRes.Index){
 					continue
 				}
+				inflight--
 				PieceRes.PrintState()
 				if !PieceRes.ValidateEntigrity(){
 					t.FailledPiece <- PieceRes
@@ -539,7 +569,6 @@ func (t *TorrentStreaming) MonitorPeers(wg *sync.WaitGroup){
 					t.Downloaded += int64(PieceRes.Size)
 					t.SetPiece(PieceRes.Index)
 					piecesDownloded++
-					inflight--
 				}
 			case failledPiece  := <- t.FailledPiece:
 				failledPeices = append(failledPeices, failledPiece)
@@ -596,9 +625,6 @@ func (t *TorrentStreaming) StartPeers(wg *sync.WaitGroup){
 		val.InitBroadcast()
 		val.SetUpServerBitField(t.Bitfield)
 		val.SetGood(true)
-		// for _, f := range(t.Files) {
-		// 	fileUploads = append(fileUploads, f.NewFileUploads())
-		// }
 		val.ChokeUpload.Store(true) 
 		wg.Add(1)
         go val.PeerGoRotine(wg)

@@ -69,7 +69,7 @@ func (ms *MovieStreamingService) HasBitField(infoHash []byte, start uint64, end 
 
 
 	for t.HasRange(int64(start), int64(end)) == false {
-		time.Sleep(300 * time.Millisecond)
+		time.Sleep(1 * time.Second)
 		fmt.Println("------------------still not good")
 	}
 
