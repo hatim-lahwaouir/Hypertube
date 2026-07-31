@@ -7,3 +7,6 @@ type CurrentState struct {
 	PeerId     [20]byte
 	Port       uint16
 }
+
+
+

@@ -2,6 +2,7 @@ package services
 
 import (
 	"crypto/rand"
+	"encoding/hex"
 	"fmt"
 	"maps"
 	mrand "math/rand"
@@ -13,8 +14,9 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
-	"encoding/hex"
+
 	"github.com/hatim-lahwaouir/Hypertube/movie_streaming/bittorentProtocol"
 	bittorent "github.com/hatim-lahwaouir/Hypertube/movie_streaming/bittorentProtocol"
 )
@@ -39,10 +41,15 @@ type TorrentStreaming struct {
 	PeersMutex sync.RWMutex
 	BitFieldMutext sync.Mutex	
 	NPiece     uint32
-	
+
+
+	CurPiece   atomic.Int64
+
+
 	PiecesToWrite chan *bittorent.PieceWork
 	FailledPiece  chan *bittorent.PieceWork
 	PieceWorkResChan chan *bittorent.PieceWork
+	inflight atomic.Int64
 }
 
 
@@ -415,7 +422,7 @@ func (t *TorrentStreaming) GetUDPPeers(){
 
 
 func (t *TorrentStreaming) CalculateTheWindow() int64 {
-	targetWindowBytes := int64(10 * 1024 * 1024) 
+	targetWindowBytes := int64(10* 1024 * 1024) 
     
     windowPieces := (targetWindowBytes + t.PieceLength - 1) / t.PieceLength
     if windowPieces < 1 {
@@ -444,6 +451,7 @@ func (t *TorrentStreaming) SendPiece(piece *bittorent.PieceWork) bool {
 		if t.Peers[i].HasPiece(piece.Index) && !t.Peers[i].PeerIsChoking(){
 			select{
 			case t.Peers[i].PieceWorkRecvChan <- piece:
+				fmt.Println("Piece", piece.Index, "was requested ")
 				return  true
 			default:
 				continue
@@ -451,9 +459,12 @@ func (t *TorrentStreaming) SendPiece(piece *bittorent.PieceWork) bool {
 		}
 	}
 
+	fmt.Println("----- no peer has this piece -----", piece.Index)
 	t.FailledPiece <- piece
 	return false
 }
+
+
 func (t *TorrentStreaming) ClearResources(){
 		close(t.PiecesToWrite)
 		close(t.PieceWorkResChan)
@@ -472,24 +483,65 @@ func (t *TorrentStreaming) ClearResources(){
 
 
 
-func (t *TorrentStreaming) Praiority(w int64) int {
+func (t *TorrentStreaming) Priority(w int64)  {
 	
-	inflight := 0
-	
-	for i := t.FirstPiece(); i < t.LastPiece(); i++ {
-		if int64(inflight) == w{
+
+	for i := t.CurPiece.Load() ; i <= t.LastPiece(); i++ {
+		if t.inflight.Load() == w{
 			break
 		}
 		if !t.HasPiece(uint32(i)){
-			fmt.Println("Piece", i, "was requested ")
 			t.SendPiece(bittorent.NewPieceWork(uint32(i), uint32(t.PieceLength), uint32(t.Length), t.Pieces[i]))
-			inflight++
+			t.inflight.Add(1)
 		}
-
 	}
 
-	return inflight
+
+
+	
+	for i := t.FirstPiece() ; i <= t.LastPiece(); i++ {
+		if t.inflight.Load() == w{
+			break
+		}
+		if !t.HasPiece(uint32(i)){
+			t.SendPiece(bittorent.NewPieceWork(uint32(i), uint32(t.PieceLength), uint32(t.Length), t.Pieces[i]))
+			t.inflight.Add(1)
+		}
+	}
 }
+
+
+
+func (t *TorrentStreaming) ChangePriority(curr int64) {
+	
+	fmt.Println(">>>>>>>.-------------", (t.MovieFile.Offset + curr) / t.PieceLength ,curr, t.MovieFile.Offset, t.NPiece,)
+
+	if curr < 0 {
+		curr = 0
+	}
+
+
+	if curr >= t.MovieFile.Size {
+		curr = t.MovieFile.Size - 1
+	}
+
+	globalOffset := t.MovieFile.Offset + curr
+	piece := globalOffset / t.PieceLength
+
+	if piece < t.FirstPiece() {
+		piece = t.FirstPiece()
+	}
+	if piece > t.LastPiece() {
+		piece = t.LastPiece()
+	}
+
+	t.CurPiece.Store(piece)
+
+	t.inflight.Store(0)
+
+	fmt.Println("******", t.CurPiece.Load())
+}
+
 
 
 
@@ -502,13 +554,12 @@ func (t *TorrentStreaming) MonitorPeers(wg *sync.WaitGroup){
         PeerWg sync.WaitGroup
 		
 		piecesDownloded int64
-		inflight int
 		failledPeices []*bittorent.PieceWork
 
     )
 
-      
-	//
+
+	t.CurPiece.Store(t.FirstPiece())
 	done := make(chan bool , 1)
 
 	t.FailledPiece = make(chan *bittorent.PieceWork , t.NPiece )
@@ -525,18 +576,9 @@ func (t *TorrentStreaming) MonitorPeers(wg *sync.WaitGroup){
 	t.StartPeers(&PeerWg)
 
 	piecesDownloded = 0
-	inflight = 0
-	// nextPieceToRequest := t.FirstPiece()
 
 	start := time.Now()
 	windowPieces := t.CalculateTheWindow()
-
-	// // install always first 2 windows
-	// for  nextPieceToRequest  <= windowPieces * 2 {
-	// 	t.SendPiece(bittorent.NewPieceWork(uint32(nextPieceToRequest), uint32(t.PieceLength), uint32(t.Length), t.Pieces[nextPieceToRequest]))
-	// 	nextPieceToRequest++
-	// 	inflight++
-	// }
 
 
 	
@@ -549,16 +591,13 @@ func (t *TorrentStreaming) MonitorPeers(wg *sync.WaitGroup){
 			// 	nextPieceToRequest++
 			// }
 
-			fmt.Println("inflight", inflight)
-			if inflight == 0{
-				inflight = t.Praiority(windowPieces)
-			}
+			t.Priority(windowPieces)
 			select{
 			case PieceRes := <- t.PieceWorkResChan:
 				if t.HasPiece(PieceRes.Index){
 					continue
 				}
-				inflight--
+				t.inflight.Add(-1)
 				PieceRes.PrintState()
 				if !PieceRes.ValidateEntigrity(){
 					t.FailledPiece <- PieceRes

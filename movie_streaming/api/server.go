@@ -1,13 +1,14 @@
 package api
 
 import (
+	"fmt"
+	"log"
+	"net/http"
+
 	"github.com/hatim-lahwaouir/Hypertube/movie_streaming/handler"
-	// "github.com/hatim-lahwaouir/Hypertube/movie_streaming/models"
 	"github.com/hatim-lahwaouir/Hypertube/movie_streaming/services"
 	"github.com/hatim-lahwaouir/Hypertube/movie_streaming/utils"
 	"github.com/joho/godotenv"
-	"log"
-	"net/http"
 )
 
 func corsMiddleware(next http.Handler) http.Handler {
@@ -46,15 +47,7 @@ func StartServer(server http.Server) error {
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
-	// start db
-	// db := models.StartDb()
 
-	// models repositories
-
-	// movieRep := models.NewMoviRepository(db)
-	//services
-
-	// downalodService := services.NewDownloadMovieInfoService(movieRep)
 	StreamingService := services.NewMovieStreamingService()
 	// handlers
 	//movieHandler := handler.NewMovieHandler(downalodService)
@@ -62,14 +55,10 @@ func StartServer(server http.Server) error {
 
 	router := http.NewServeMux()
 
-	// log.Println("db up", db)
-	// router.HandleFunc("POST /search-movies/{page}", utils.MakeHandler(movieHandler.MovieSuggestions))
-	// router.HandleFunc("POST /search-movies-omdb/{page}", utils.MakeHandler(movieHandler.MovieSuggersionsOMDB))
-
 	router.HandleFunc("POST /movie/", utils.MakeHandler(movieStreamHandler.Download))
 	router.HandleFunc("GET /movie/{infohash}", utils.MakeHandler(movieStreamHandler.StreamVideo))
 
 	server.Handler = corsMiddleware(router)
-
+	fmt.Println("here")
 	return server.ListenAndServe()
 }

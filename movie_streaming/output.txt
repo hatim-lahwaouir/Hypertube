@@ -1,0 +1,20 @@
+Server listening on port 8080
+here
+&{udp 47.ip-51-68-199.eu:6969 0 false {0 0 <nil>}}
+&{udp 9.rarbg.me:2780 0 false {0 0 <nil>}}
+&{udp 9.rarbg.to:2710 0 false {0 0 <nil>}}
+&{udp 9.rarbg.to:2730 0 false {0 0 <nil>}}
+&{udp 9.rarbg.to:2920 0 false {0 0 <nil>}}
+&{udp open.stealth.si:80 0 false {0 0 <nil>}}
+&{udp opentracker.i2p.rocks:6969 0 false {0 0 <nil>}}
+&{udp tracker.coppersurfer.tk:6969 0 false {0 0 <nil>}}
+&{udp tracker.cyberia.is:6969 0 false {0 0 <nil>}}
+&{udp tracker.dler.org:6969 0 false {0 0 <nil>}}
+&{udp tracker.internetwarriors.net:1337 0 false {0 0 <nil>}}
+&{udp tracker.leechers-paradise.org:6969 0 false {0 0 <nil>}}
+&{udp tracker.openbittorrent.com:6969 0 false {0 0 <nil>}}
+&{udp tracker.opentrackr.org:1337 0 false {0 0 <nil>}}
+&{udp tracker.pirateparty.gr:6969 0 false {0 0 <nil>}}
+&{udp tracker.tiny-vps.com:6969 0 false {0 0 <nil>}}
+&{udp tracker.torrent.eu.org:451 0 false {0 0 <nil>}}
+[91 62 98 63 68 59 178 65 255 151 140 212 244 36 24 178 4 148 204 1]

@@ -20,6 +20,7 @@ const (
 	MsgRequest       messageID = 6
 	MsgPiece         messageID = 7
 	MsgCancel        messageID = 8
+	MsgExtention        messageID = 20
 )
 
 type Msg struct {
@@ -67,7 +68,7 @@ func (m *Msg) ParseRequest() (uint32, uint32,uint32, bool) {
 
 	pieceIndex := binary.BigEndian.Uint32(m.Payload[0:4])
 	begin := binary.BigEndian.Uint32(m.Payload[4:8])
-	length := binary.BigEndian.Uint32(m.Payload[4:8])
+	length := binary.BigEndian.Uint32(m.Payload[8:12])
 
 	return pieceIndex, begin, length, true
 }

@@ -48,6 +48,59 @@ type Peer struct {
 
 }
 
+
+func (p *Peer) PeerExtentionHandShake(h *HandShake) []byte {
+
+	if !p.IsGood() {
+		return nil
+	}
+
+	rawBytes := h.Serialize()
+
+	p.Conn.SetWriteDeadline(time.Now().Add(time.Second * 5))
+	if _, err := p.Conn.Write(rawBytes); err != nil {
+		p.SetGood(false)
+		return nil
+	}
+	resp := make([]byte, 68)
+
+	p.Conn.SetReadDeadline(time.Now().Add(time.Second * 5))
+	_, err := p.Conn.Read(resp)
+	if err != nil {
+		p.SetGood(false)
+		return nil
+	}
+	return resp
+}
+
+
+func (p *Peer) ValidExtentionHandShake(h *HandShake, peerResp []byte) bool {
+
+	if !p.IsGood() {
+		return false
+	}
+	rawBytes := h.Serialize()
+	// comapre hash info and pstr
+	if !bytes.Equal(peerResp[28:len(peerResp)-20], rawBytes[28:len(rawBytes)-20]) ||
+		!bytes.Equal(rawBytes[0:20], peerResp[0:20]) {
+		p.SetGood(false)
+		return false
+	}
+	ReservedBytes :=  peerResp[20:40]
+
+	if (ReservedBytes[5] & 0x10) != 0 {
+		fmt.Println("client support extensions ")
+		p.SetGood(false)
+		return true
+	}
+	return false
+}
+
+
+
+
+
+
 func (p *Peer) SetUpServerBitField(b []byte) {
 	p.ServerBitField = b
 }
@@ -476,7 +529,7 @@ func (p *Peer) PeerGoRotine(wg *sync.WaitGroup) {
 				if piece.Done(){
 					continue
 				}
-				if lastDownload + 2000000 >  piece.GetDownloaded() {
+				if lastDownload + 1000000 >  piece.GetDownloaded() {
 					stop = true
 				} else {
 						lastDownload = piece.GetDownloaded()
@@ -581,6 +634,8 @@ func (p *Peer) PeerMesgs(wg *sync.WaitGroup) {
 			p.InterestedStatus(true)
 		case MsgRequest:
 			fmt.Println("-------------------------send request ----------------------")
+		case MsgExtention:
+			fmt.Println("-------------------------Client support extension ----------------------")
 
 		}
 

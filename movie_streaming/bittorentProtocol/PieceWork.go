@@ -32,6 +32,13 @@ const (
 
 func NewPieceWork(index uint32, size uint32, allPiecesSize uint32, expectedSha1 [20]byte) *PieceWork {
 
+	if size * (index + 1) > allPiecesSize{
+		fmt.Println("piece size ",size, allPiecesSize - (size * index))
+		size = allPiecesSize - (size * index)
+		// os.Exit(1)
+	}
+
+
 	p := &PieceWork{
 		Index:           index,
 		Size:            size,

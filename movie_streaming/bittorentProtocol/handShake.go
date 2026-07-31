@@ -28,3 +28,20 @@ func (h *HandShake) Serialize() []byte {
 
 	return buff.Bytes()
 }
+
+
+
+func (h *HandShake) SerializeExtension() []byte {
+	var (
+		buff *bytes.Buffer
+	)
+	buff = new(bytes.Buffer)
+
+	buff.Write([]byte{19})
+	buff.Write([]byte("BitTorrent protocol"))
+	buff.Write([]byte{0,0,0,0,10,0,0,0})
+	buff.Write(h.InfoHash[:])
+	buff.Write(h.PeerId[:])
+
+	return buff.Bytes()
+}
