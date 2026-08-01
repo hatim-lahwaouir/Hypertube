@@ -63,8 +63,6 @@ func (d *DownloadTorrent) DownloadTorrent() (*os.File, error) {
 		file.Close()
 		return nil,err
 	}
-
-
 	if _, err := file.Seek(0, io.SeekStart); err != nil {
 		file.Close()
 		return nil, err
