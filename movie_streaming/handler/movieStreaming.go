@@ -19,35 +19,40 @@ func NewMovieStreamingHandler(ms *services.MovieStreamingService) *MovieStreamin
 	return &MovieStreaming{MoviStreamingService: ms,}
 }
 
-var magnetLink string = "magnet:?xt=urn:btih:5B3E623F443BB241FF978CD4F42418B20494CC01&dn=Spider-Man+Brand+New+Day+2026+CAM+H264-OnlyFlix&tr=http%3A%2F%2Fp4p.arenabg.com%3A1337%2Fannounce&tr=udp%3A%2F%2F47.ip-51-68-199.eu%3A6969%2Fannounce&tr=udp%3A%2F%2F9.rarbg.me%3A2780%2Fannounce&tr=udp%3A%2F%2F9.rarbg.to%3A2710%2Fannounce&tr=udp%3A%2F%2F9.rarbg.to%3A2730%2Fannounce&tr=udp%3A%2F%2F9.rarbg.to%3A2920%2Fannounce&tr=udp%3A%2F%2Fopen.stealth.si%3A80%2Fannounce&tr=udp%3A%2F%2Fopentracker.i2p.rocks%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.cyberia.is%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.dler.org%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.openbittorrent.com%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337&tr=udp%3A%2F%2Ftracker.pirateparty.gr%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.tiny-vps.com%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.torrent.eu.org%3A451%2Fannounce"
+var magnetLink string = "magnet:?xt=urn:btih:40EC2D6BEB4B40F528250F535411F2BC79D4140A&dn=The+Man+from+Earth+%282007%29+%5B720p%5D+%5BYTS.MX%5D&tr=udp%3A%2F%2Fglotorrents.pw%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.openbittorrent.com%3A80&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969&tr=udp%3A%2F%2Fp4p.arenabg.ch%3A1337&tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337"
 
 
 
 
 func (ms *MovieStreaming) Download(w http.ResponseWriter, r *http.Request) error {
-    r.ParseMultipartForm(20 << 20)
+    // r.ParseMultipartForm(20 << 20)
 
-    file, _, err := r.FormFile("torrent")
-    if err != nil {
-		return utils.WriteResp(w, http.StatusBadRequest, "Invalid torrent name")
-    }	
-	defer file.Close()
-
+    // file, _, err := r.FormFile("torrent")
+    // if err != nil {
+	// 	return utils.WriteResp(w, http.StatusBadRequest, "Invalid torrent name")
+    // }	
+	// defer file.Close()
 	// install the torrent the passit to the parseTorrent
 
 	t := services.NewDownloadTorrent(magnetLink)
 	
-	if err := t.DownloadTorrent(); err != nil {
-		fmt.Println("err >>", err)
+	file, err :=  t.DownloadTorrent()
+	if err != nil  {
+		fmt.Println("err internal server error", err)
+		return utils.WriteResp(w, http.StatusInternalServerError, "StatusInternalServerError")
 	}
 
+	defer file.Close()
 
-	// // infoHash, err := ms.MoviStreamingService.ParseTorrent(file)
-	// if err != nil {
-	// 	fmt.Println(err.Error())
-	// }
 
-	return utils.WriteResp(w, http.StatusCreated, "ok")
+
+	UUID , err := ms.MoviStreamingService.ParseTorrent(file)
+	if err != nil {
+		fmt.Println(err.Error())
+		return utils.WriteResp(w, http.StatusInternalServerError, "StatusInternalServerError")
+	}
+
+	return utils.WriteResp(w, http.StatusCreated, UUID)
 }
 
 
@@ -79,7 +84,7 @@ func (ms *MovieStreaming) StreamVideo(w http.ResponseWriter, r *http.Request) er
 	fmt.Println("start", start, rangeHeader)
 	fmt.Println("end", end)
 	data, err := ms.MoviStreamingService.HasBitField(infoHash, uint64(start), uint64(end))
-
+	ms.MoviStreamingService.UpdateTime(infoHash)
 	if err != nil {
 		return utils.WriteResp(w, http.StatusBadRequest, err.Error())
 	}

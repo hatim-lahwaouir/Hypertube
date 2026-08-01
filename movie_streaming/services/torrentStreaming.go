@@ -50,6 +50,9 @@ type TorrentStreaming struct {
 	FailledPiece  chan *bittorent.PieceWork
 	PieceWorkResChan chan *bittorent.PieceWork
 	inflight atomic.Int64
+	done chan bool
+	Stop atomic.Bool
+
 }
 
 
@@ -69,13 +72,12 @@ func GetMovieFileOnly(files []*bittorent.File) *bittorent.File{
 
 	chosenFile = files[0]
 	for i := range(files){
-		ext := filepath.Ext(files[i].FilePath)
+		ext := strings.ToLower(filepath.Ext(files[i].FilePath))
 		if videoExts[ext]{
 			chosenFile = files[i]
 			break
 		}
 	}
-
 	return chosenFile
 }
 
@@ -100,20 +102,8 @@ func NewTorrentStreaming(p string, t *bittorent.TorrentFile) *TorrentStreaming {
 	)
 
 	// incase there is no tracker
-	trackers := []string{
-	"udp://tracker.torrent.eu.org:451/announce",
-	"udp://tracker.dler.org:6969/announce",
-	"udp://open.stealth.si:80/announce",
-	"udp://open.demonii.com:1337/announce",
-	"https://tracker.moeblog.cn:443/announce",
-	"udp://open.dstud.io:6969/announce",
-	"https://tracker.zhuqiy.com:443/announce",
-	"https://tracker.pmman.tech:443/announce",
-	}
 
-	for _, val := range(trackers){
-		t.AnnounceList = append(t.AnnounceList, []string{val})
-	}
+
 	offset := int64(0)
 	moviePath := filepath.Join(os.Getenv("MOVIES_PATH"), hex.EncodeToString(t.InfoHash))
 	for _, val := range t.Info.Files {
@@ -169,7 +159,7 @@ func NewTorrentStreaming(p string, t *bittorent.TorrentFile) *TorrentStreaming {
 		UdpTrackers: bittorentProtocol.NewUdpTrackers(udpTrackers) , HttpTrackers: httpTrackers, Left: t.CalculateLength(), Downloaded: 0, PieceLength : t.Info.PieceLength, 
 		Bitfield: bitfield, Peers : make(map[string]*bittorent.Peer),
 		NPiece: uint32(n_piece), Pieces: pieces,
-	PieceWorkResChan  : make(chan *bittorent.PieceWork, n_piece), MovieFile: GetMovieFileOnly(files), PiecesToWrite : make(chan  *bittorent.PieceWork, 50)}
+	PieceWorkResChan  : make(chan *bittorent.PieceWork, n_piece), MovieFile: GetMovieFileOnly(files), PiecesToWrite : make(chan  *bittorent.PieceWork, 50), done: make(chan bool, 1)}
 }
 
 
@@ -341,10 +331,10 @@ func (t *TorrentStreaming) ReadChunk(start int, len int) ([]byte, error) {
 }
 
 
-func (t *TorrentStreaming)  TitForTatIshAlgho(wg *sync.WaitGroup, done chan bool){
+func (t *TorrentStreaming)  TitForTatIshAlgho(peersWaitGroup *sync.WaitGroup, other *sync.WaitGroup){
 
 
-	defer wg.Done()
+	defer other.Done()
 	evalTicker := time.NewTicker(10 * time.Second)
     optimisticTicker := time.NewTicker(30 * time.Second)
 
@@ -395,9 +385,9 @@ func (t *TorrentStreaming)  TitForTatIshAlgho(wg *sync.WaitGroup, done chan bool
 							optimisticPeer = nil
 						}
 					t.GetUDPPeers()
-					t.StartPeers(wg)
+					t.StartPeers(peersWaitGroup)
 					t.DeleteAbandonedPeers()
-				case <- done:
+				case <- t.done:
 						return 
 			}
 	}
@@ -465,21 +455,26 @@ func (t *TorrentStreaming) SendPiece(piece *bittorent.PieceWork) bool {
 }
 
 
-func (t *TorrentStreaming) ClearResources(){
-		close(t.PiecesToWrite)
-		close(t.PieceWorkResChan)
-		close(t.FailledPiece)
-		
-		
-		t.PeersMutex.Lock()
+func (t *TorrentStreaming) ClearPeers(){
+	t.done <- true
+	t.PeersMutex.Lock()
 		for _, p := range(t.Peers){
 				p.SetGood(false)
 				p.Clear()
 		}
 		t.PeersMutex.Unlock()
-
+		
 		fmt.Println("clearing all peers")
-	}
+}
+
+
+
+func (t *TorrentStreaming) ClearResources(){
+		close(t.PiecesToWrite)
+		close(t.PieceWorkResChan)
+		close(t.FailledPiece)
+
+}
 
 
 
@@ -543,8 +538,9 @@ func (t *TorrentStreaming) ChangePriority(curr int64) {
 }
 
 
-
-
+func (t *TorrentStreaming) StopStreaming(){
+	t.Stop.Store(true)
+}
 
 
 func (t *TorrentStreaming) MonitorPeers(wg *sync.WaitGroup){
@@ -552,7 +548,7 @@ func (t *TorrentStreaming) MonitorPeers(wg *sync.WaitGroup){
     var (
 		// piece_send int
         PeerWg sync.WaitGroup
-		
+		OtherGorotorines sync.WaitGroup
 		piecesDownloded int64
 		failledPeices []*bittorent.PieceWork
 
@@ -560,17 +556,17 @@ func (t *TorrentStreaming) MonitorPeers(wg *sync.WaitGroup){
 
 
 	t.CurPiece.Store(t.FirstPiece())
-	done := make(chan bool , 1)
 
-	t.FailledPiece = make(chan *bittorent.PieceWork , t.NPiece )
+
+	t.FailledPiece = make(chan *bittorent.PieceWork , t.NPiece / 3)
 	defer wg.Done()
 	
 	retryTicker := time.NewTicker(2 * time.Second)
     
-	PeerWg.Add(1)
-	go t.WritePicesIntoTheDisk(&PeerWg)
-	PeerWg.Add(1)
- 	go t.TitForTatIshAlgho(&PeerWg, done)
+	OtherGorotorines.Add(1)
+	go t.WritePicesIntoTheDisk(&OtherGorotorines)
+	OtherGorotorines.Add(1)
+ 	go t.TitForTatIshAlgho(&PeerWg,&OtherGorotorines)
 
 	t.GetUDPPeers()
 	t.StartPeers(&PeerWg)
@@ -582,7 +578,7 @@ func (t *TorrentStreaming) MonitorPeers(wg *sync.WaitGroup){
 
 
 	
-	for piecesDownloded < t.LastPiece() - t.FirstPiece() + 1{		
+	for piecesDownloded < t.LastPiece() - t.FirstPiece() + 1 && !t.Stop.Load(){		
 	
 			// for inflight < windowPieces && nextPieceToRequest <= t.LastPiece(){		
 			// 	if t.SendPiece(bittorent.NewPieceWork(uint32(nextPieceToRequest), uint32(t.PieceLength), uint32(t.Length), t.Pieces[nextPieceToRequest])){
@@ -618,10 +614,18 @@ func (t *TorrentStreaming) MonitorPeers(wg *sync.WaitGroup){
 				failledPeices = nil
 			}
 	}
-	done <- true
-	t.ClearResources()
+
+	t.ClearPeers()
 	PeerWg.Wait()
+	t.ClearResources()
+	OtherGorotorines.Wait()
 	fmt.Println("we are done !", time.Since(start))
+
+	for !t.Stop.Load(){
+		time.Sleep(1 * time.Second)
+	}
+	fmt.Println("we are done  done !", time.Since(start))
+	os.Remove(t.MovieFile.FilePath)
 
 }
 

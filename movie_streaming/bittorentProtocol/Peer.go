@@ -49,54 +49,6 @@ type Peer struct {
 }
 
 
-func (p *Peer) PeerExtentionHandShake(h *HandShake) []byte {
-
-	if !p.IsGood() {
-		return nil
-	}
-
-	rawBytes := h.Serialize()
-
-	p.Conn.SetWriteDeadline(time.Now().Add(time.Second * 5))
-	if _, err := p.Conn.Write(rawBytes); err != nil {
-		p.SetGood(false)
-		return nil
-	}
-	resp := make([]byte, 68)
-
-	p.Conn.SetReadDeadline(time.Now().Add(time.Second * 5))
-	_, err := p.Conn.Read(resp)
-	if err != nil {
-		p.SetGood(false)
-		return nil
-	}
-	return resp
-}
-
-
-func (p *Peer) ValidExtentionHandShake(h *HandShake, peerResp []byte) bool {
-
-	if !p.IsGood() {
-		return false
-	}
-	rawBytes := h.Serialize()
-	// comapre hash info and pstr
-	if !bytes.Equal(peerResp[28:len(peerResp)-20], rawBytes[28:len(rawBytes)-20]) ||
-		!bytes.Equal(rawBytes[0:20], peerResp[0:20]) {
-		p.SetGood(false)
-		return false
-	}
-	ReservedBytes :=  peerResp[20:40]
-
-	if (ReservedBytes[5] & 0x10) != 0 {
-		fmt.Println("client support extensions ")
-		p.SetGood(false)
-		return true
-	}
-	return false
-}
-
-
 
 
 
@@ -166,7 +118,7 @@ func (p *Peer) IsInterested() bool {
 func (p *Peer) SetChannel(FailledPiece chan *PieceWork, PieceWorkResChan chan *PieceWork) {
 	p.FailledPiece = FailledPiece
 	p.PieceWorkResChan = PieceWorkResChan
-	p.PieceWorkRecvChan = make(chan *PieceWork, len(p.BitField))
+	p.PieceWorkRecvChan = make(chan *PieceWork, 5)
 	p.PieceDone = make(chan bool, 1)
 }
 
@@ -252,7 +204,7 @@ func NewPeers(resp []byte, n int) []*Peer {
 }
 
 func (p *Peer) Connect() {
-	conn, err := net.DialTimeout("tcp", p.IP.String()+":"+strconv.FormatUint(uint64(p.Port), 10), 5*time.Second)
+	conn, err := net.DialTimeout("tcp", p.IP.String()+":"+strconv.FormatUint(uint64(p.Port), 10), 10 *time.Second)
 	if err != nil {
 		p.SetGood(false)
 		return

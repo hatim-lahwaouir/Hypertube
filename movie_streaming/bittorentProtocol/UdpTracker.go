@@ -28,7 +28,21 @@ type UdpTrackers struct {
 
 func NewUdpTrackers(UdpTracker []*UdpTracker) *UdpTrackers {
 
-	return &UdpTrackers{trackers: UdpTracker}
+	res := UdpTrackers{trackers: UdpTracker}
+
+	trackers := []string{
+	"udp://tracker.torrent.eu.org:451/announce",
+	"udp://tracker.dler.org:6969/announce",
+	"udp://open.stealth.si:80/announce",
+	"udp://open.demonii.com:1337/announce",
+	"udp://open.dstud.io:6969/announce",
+	}
+
+	for _, val := range(trackers){
+		res.trackers = append(res.trackers, NewUdpTracker(val))
+	}
+
+	return &res
 }
 
 
@@ -106,10 +120,8 @@ func (u *UdpTracker) GetConnectionId() {
 		resp     []byte
 		connResp ConnectionResp
 	)
-	if u.lastTime.IsZero(){
-		u.lastTime = time.Now()
-	}
-	if time.Until(u.lastTime.Add(2 * time.Minute)) < 0 {
+
+	if !u.lastTime.IsZero() && time.Since(u.lastTime) < 2 * time.Second {
 		return
 	}
 	u.lastTime = time.Now()
@@ -181,7 +193,7 @@ func (u *UdpTracker) GetPeers(state *CurrentState) []*Peer {
 		return nil
 	}
 
-	conn, err := net.DialTimeout(u.Scheme, u.Host, time.Second*1)
+	conn, err := net.DialTimeout(u.Scheme, u.Host, time.Second*3)
 	if err != nil {
 		return nil
 	}

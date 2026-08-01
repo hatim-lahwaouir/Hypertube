@@ -1,20 +1,2220 @@
 Server listening on port 8080
 here
-&{udp 47.ip-51-68-199.eu:6969 0 false {0 0 <nil>}}
-&{udp 9.rarbg.me:2780 0 false {0 0 <nil>}}
-&{udp 9.rarbg.to:2710 0 false {0 0 <nil>}}
-&{udp 9.rarbg.to:2730 0 false {0 0 <nil>}}
-&{udp 9.rarbg.to:2920 0 false {0 0 <nil>}}
-&{udp open.stealth.si:80 0 false {0 0 <nil>}}
-&{udp opentracker.i2p.rocks:6969 0 false {0 0 <nil>}}
-&{udp tracker.coppersurfer.tk:6969 0 false {0 0 <nil>}}
-&{udp tracker.cyberia.is:6969 0 false {0 0 <nil>}}
-&{udp tracker.dler.org:6969 0 false {0 0 <nil>}}
-&{udp tracker.internetwarriors.net:1337 0 false {0 0 <nil>}}
-&{udp tracker.leechers-paradise.org:6969 0 false {0 0 <nil>}}
-&{udp tracker.openbittorrent.com:6969 0 false {0 0 <nil>}}
-&{udp tracker.opentrackr.org:1337 0 false {0 0 <nil>}}
-&{udp tracker.pirateparty.gr:6969 0 false {0 0 <nil>}}
-&{udp tracker.tiny-vps.com:6969 0 false {0 0 <nil>}}
-&{udp tracker.torrent.eu.org:451 0 false {0 0 <nil>}}
-[91 62 98 63 68 59 178 65 255 151 140 212 244 36 24 178 4 148 204 1]
+3000 200
+3000 152
+3000 194
+checking movies>>>>>>>>>>>
+cur peers 55
+----- no peer has this piece ----- 0
+----- no peer has this piece ----- 1
+----- no peer has this piece ----- 2
+----- no peer has this piece ----- 3
+----- no peer has this piece ----- 4
+----- no peer has this piece ----- 5
+----- no peer has this piece ----- 6
+----- no peer has this piece ----- 7
+----- no peer has this piece ----- 8
+----- no peer has this piece ----- 9
+----- no peer has this piece ----- 0
+----- no peer has this piece ----- 1
+Piece 2 was requested 
+Piece 3 was requested 
+Piece 4 was requested 
+Piece 5 was requested 
+Piece 6 was requested 
+Piece 7 was requested 
+Piece 8 was requested 
+Piece 9 was requested 
+Piece 0 was requested 
+Piece 1 was requested 
+5 piece took  2.458393955s
+Piece 0 was requested 
+2 piece took  2.534046512s
+Piece 0 was requested 
+0 piece took  2.761868348s
+Piece 1 was requested 
+1 piece took  237.901612ms
+Piece 3 was requested 
+3 piece took  3.030055452s
+Piece 4 was requested 
+4 piece took  3.146608614s
+Piece 6 was requested 
+7 piece took  3.448831336s
+Piece 6 was requested 
+6 piece took  3.524601081s
+Piece 8 was requested 
+8 piece took  4.326556153s
+Piece 9 was requested 
+9 piece took  5.28432748s
+Piece 10 was requested 
+10 piece took  1.057783277s
+Piece 11 was requested 
+checking movies>>>>>>>>>>>
+11 piece took  1.003041209s
+Piece 12 was requested 
+12 piece took  302.791146ms
+Piece 13 was requested 
+start 0 bytes=0-
+end 1999999
+>>>>>>>.------------- 0 0 0 601
+****** 0
+[255 248 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+------------->>>>>>>>>>>>> 2000000 0 1999999
+start 2000000 bytes=2000000-
+end 3999999
+>>>>>>>.------------- 1 2000000 0 601
+****** 1
+[255 248 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+------------->>>>>>>>>>>>> 2000000 2000000 3999999
+start 629899264 bytes=629899264-
+end 631899263
+>>>>>>>.------------- 600 629899264 0 601
+****** 600
+[255 248 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0]
+13 piece took  585.441811ms
+piece size  1048576 1020514
+Piece 600 was requested 
+Piece 14 was requested 
+Piece 15 was requested 
+Piece 16 was requested 
+Piece 17 was requested 
+Piece 18 was requested 
+Piece 19 was requested 
+Piece 20 was requested 
+Piece 21 was requested 
+Piece 22 was requested 
+Piece 23 was requested 
+15 piece took  241.706716ms
+piece size  1048576 1020514
+Piece 600 was requested 
+600 piece took  381.177031ms
+Piece 14 was requested 
+21 piece took  480.780986ms
+Piece 14 was requested 
+14 piece took  788.155517ms
+Piece 16 was requested 
+------------------still not good
+[255 255 4 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 128]
+------------->>>>>>>>>>>>> 2314 629899264 631899263
+20 piece took  871.337556ms
+Piece 16 was requested 
+16 piece took  340.985087ms
+Piece 17 was requested 
+17 piece took  1.715982643s
+Piece 18 was requested 
+22 piece took  1.922010769s
+Piece 18 was requested 
+18 piece took  2.116232464s
+Piece 19 was requested 
+19 piece took  2.519973475s
+Piece 23 was requested 
+23 piece took  2.840072937s
+Piece 24 was requested 
+24 piece took  2.20585419s
+Piece 25 was requested 
+25 piece took  402.137559ms
+Piece 26 was requested 
+26 piece took  402.24787ms
+Piece 27 was requested 
+start 3014656 bytes=3014656-
+end 5014655
+>>>>>>>.------------- 2 3014656 0 601
+****** 2
+[255 255 255 224 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 128]
+------------->>>>>>>>>>>>> 2000000 3014656 5014655
+start 5014656 bytes=5014656-
+end 7014655
+>>>>>>>.------------- 4 5014656 0 601
+****** 4
+[255 255 255 224 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 128]
+------------->>>>>>>>>>>>> 2000000 5014656 7014655
+27 piece took  402.060023ms
+Piece 28 was requested 
+Piece 29 was requested 
+Piece 30 was requested 
+Piece 31 was requested 
+Piece 32 was requested 
+Piece 33 was requested 
+Piece 34 was requested 
+Piece 35 was requested 
+Piece 36 was requested 
+Piece 37 was requested 
+Piece 38 was requested 
+35 piece took  228.250323ms
+Piece 28 was requested 
+28 piece took  402.303334ms
+Piece 29 was requested 
+38 piece took  766.432823ms
+Piece 29 was requested 
+29 piece took  806.172944ms
+Piece 30 was requested 
+34 piece took  845.606278ms
+Piece 30 was requested 
+30 piece took  1.210607306s
+Piece 31 was requested 
+31 piece took  1.673125497s
+Piece 32 was requested 
+36 piece took  1.685595905s
+Piece 32 was requested 
+32 piece took  2.074109561s
+Piece 33 was requested 
+checking movies>>>>>>>>>>>
+33 piece took  2.475362152s
+Piece 37 was requested 
+37 piece took  2.513814326s
+Piece 39 was requested 
+39 piece took  866.933556ms
+Piece 40 was requested 
+40 piece took  1.9103769s
+Piece 41 was requested 
+41 piece took  267.177488ms
+Piece 42 was requested 
+42 piece took  408.128426ms
+Piece 43 was requested 
+43 piece took  401.027683ms
+Piece 44 was requested 
+44 piece took  401.534645ms
+Piece 45 was requested 
+45 piece took  432.485813ms
+Piece 46 was requested 
+start 7014656 bytes=7014656-
+end 9014655
+>>>>>>>.------------- 6 7014656 0 601
+****** 6
+[255 255 255 255 255 252 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 128]
+------------->>>>>>>>>>>>> 2000000 7014656 9014655
+46 piece took  402.481353ms
+Piece 47 was requested 
+Piece 48 was requested 
+Piece 49 was requested 
+Piece 50 was requested 
+Piece 51 was requested 
+Piece 52 was requested 
+Piece 53 was requested 
+Piece 54 was requested 
+Piece 55 was requested 
+Piece 56 was requested 
+Piece 57 was requested 
+49 piece took  263.540039ms
+Piece 47 was requested 
+47 piece took  450.232678ms
+Piece 48 was requested 
+55 piece took  524.668842ms
+Piece 48 was requested 
+48 piece took  852.846292ms
+Piece 50 was requested 
+52 piece took  1.087428657s
+Piece 50 was requested 
+50 piece took  1.257505338s
+Piece 51 was requested 
+51 piece took  1.660286439s
+Piece 53 was requested 
+56 piece took  2.013340823s
+Piece 53 was requested 
+53 piece took  2.064730676s
+Piece 54 was requested 
+54 piece took  2.48243679s
+Piece 57 was requested 
+57 piece took  3.217014795s
+Piece 58 was requested 
+3000 158
+3000 200
+3000 194
+checking movies>>>>>>>>>>>
+58 piece took  1.687868423s
+Piece 59 was requested 
+59 piece took  403.668598ms
+Piece 60 was requested 
+60 piece took  452.98997ms
+Piece 61 was requested 
+61 piece took  380.137361ms
+Piece 62 was requested 
+62 piece took  977.321059ms
+Piece 63 was requested 
+63 piece took  583.474457ms
+Piece 64 was requested 
+64 piece took  262.214459ms
+Piece 65 was requested 
+65 piece took  403.75763ms
+Piece 66 was requested 
+start 9014656 bytes=9014656-
+end 11014655
+>>>>>>>.------------- 8 9014656 0 601
+****** 8
+[255 255 255 255 255 255 255 255 192 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 128]
+------------->>>>>>>>>>>>> 2000000 9014656 11014655
+66 piece took  401.622583ms
+Piece 67 was requested 
+Piece 68 was requested 
+Piece 69 was requested 
+Piece 70 was requested 
+Piece 71 was requested 
+Piece 72 was requested 
+Piece 73 was requested 
+Piece 74 was requested 
+Piece 75 was requested 
+Piece 76 was requested 
+Piece 77 was requested 
+68 piece took  379.739805ms
+Piece 67 was requested 
+67 piece took  262.157891ms
+Piece 69 was requested 
+70 piece took  722.170472ms
+Piece 69 was requested 
+cur peers 55
+71 piece took  1.101355492s
+Piece 69 was requested 
+72 piece took  1.480700827s
+Piece 69 was requested 
+start 11014656 bytes=11014656-
+end 13014655
+>>>>>>>.------------- 10 11014656 0 601
+****** 10
+[255 255 255 255 255 255 255 255 251 128 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 128]
+------------->>>>>>>>>>>>> 2000000 11014656 13014655
+74 piece took  1.644439795s
+Piece 69 was requested 
+Piece 73 was requested 
+Piece 75 was requested 
+Piece 76 was requested 
+Piece 77 was requested 
+Piece 78 was requested 
+Piece 79 was requested 
+Piece 80 was requested 
+Piece 81 was requested 
+Piece 82 was requested 
+Piece 83 was requested 
+73 piece took  1.881922764s
+Piece 69 was requested 
+69 piece took  1.897661109s
+Piece 75 was requested 
+79 piece took  262.922164ms
+Piece 75 was requested 
+82 piece took  525.587845ms
+Piece 75 was requested 
+75 piece took  2.291487609s
+Piece 76 was requested 
+83 piece took  791.4325ms
+Piece 76 was requested 
+76 piece took  3.031718062s
+Piece 77 was requested 
+start 13014656 bytes=13014656-
+end 15014655
+>>>>>>>.------------- 12 13014656 0 601
+****** 12
+[255 255 255 255 255 255 255 255 255 249 48 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 128]
+------------->>>>>>>>>>>>> 2000000 13014656 15014655
+Piece 77 was requested 
+Piece 78 was requested 
+Piece 80 was requested 
+Piece 81 was requested 
+Piece 84 was requested 
+Piece 85 was requested 
+Piece 86 was requested 
+Piece 87 was requested 
+Piece 88 was requested 
+Piece 89 was requested 
+84 piece took  271.536942ms
+Piece 77 was requested 
+85 piece took  510.966602ms
+Piece 77 was requested 
+77 piece took  4.425465299s
+Piece 78 was requested 
+86 piece took  795.612396ms
+Piece 78 was requested 
+87 piece took  1.021570081s
+Piece 78 was requested 
+88 piece took  1.224627353s
+Piece 78 was requested 
+89 piece took  1.493687098s
+Piece 78 was requested 
+78 piece took  1.567633287s
+Piece 80 was requested 
+checking movies>>>>>>>>>>>
+80 piece took  1.947604434s
+Piece 81 was requested 
+81 piece took  2.350964706s
+Piece 90 was requested 
+90 piece took  2.701961607s
+Piece 91 was requested 
+91 piece took  999.502888ms
+Piece 92 was requested 
+92 piece took  800.602633ms
+Piece 93 was requested 
+start 15014656 bytes=15014656-
+end 17014655
+>>>>>>>.------------- 14 15014656 0 601
+****** 14
+[255 255 255 255 255 255 255 255 255 255 255 248 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 128]
+------------->>>>>>>>>>>>> 2000000 15014656 17014655
+93 piece took  402.816351ms
+Piece 94 was requested 
+Piece 95 was requested 
+Piece 96 was requested 
+Piece 97 was requested 
+Piece 98 was requested 
+Piece 99 was requested 
+Piece 100 was requested 
+Piece 101 was requested 
+Piece 102 was requested 
+Piece 103 was requested 
+Piece 104 was requested 
+95 piece took  269.319005ms
+Piece 94 was requested 
+96 piece took  402.257811ms
+Piece 94 was requested 
+97 piece took  806.356387ms
+Piece 94 was requested 
+94 piece took  839.975368ms
+Piece 98 was requested 
+98 piece took  1.186131848s
+Piece 99 was requested 
+100 piece took  1.587999885s
+Piece 99 was requested 
+99 piece took  1.889177647s
+Piece 101 was requested 
+101 piece took  1.987694215s
+Piece 102 was requested 
+102 piece took  2.389862602s
+Piece 103 was requested 
+103 piece took  3.169788686s
+Piece 104 was requested 
+104 piece took  4.389770037s
+Piece 105 was requested 
+105 piece took  260.646101ms
+Piece 106 was requested 
+checking movies>>>>>>>>>>>
+start 17014656 bytes=17014656-
+end 19014655
+>>>>>>>.------------- 16 17014656 0 601
+****** 16
+[255 255 255 255 255 255 255 255 255 255 255 255 255 192 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 128]
+------------->>>>>>>>>>>>> 2000000 17014656 19014655
+106 piece took  893.027742ms
+Piece 107 was requested 
+Piece 108 was requested 
+Piece 109 was requested 
+Piece 110 was requested 
+Piece 111 was requested 
+Piece 112 was requested 
+Piece 113 was requested 
+Piece 114 was requested 
+Piece 115 was requested 
+Piece 116 was requested 
+Piece 117 was requested 
+107 piece took  403.587921ms
+Piece 108 was requested 
+112 piece took  736.860152ms
+Piece 108 was requested 
+108 piece took  785.922605ms
+Piece 109 was requested 
+109 piece took  1.167718559s
+Piece 110 was requested 
+110 piece took  267.092373ms
+Piece 111 was requested 
+115 piece took  1.95406068s
+Piece 111 was requested 
+111 piece took  2.029597586s
+Piece 113 was requested 
+113 piece took  2.410066849s
+Piece 114 was requested 
+114 piece took  3.612538407s
+Piece 116 was requested 
+116 piece took  643.69459ms
+Piece 117 was requested 
+117 piece took  5.7964636s
+Piece 118 was requested 
+3000 158
+3000 200
+3000 194
+checking movies>>>>>>>>>>>
+118 piece took  3.911222814s
+Piece 119 was requested 
+cur peers 55
+119 piece took  2.56976123s
+Piece 120 was requested 
+120 piece took  1.795368158s
+Piece 121 was requested 
+121 piece took  967.480864ms
+Piece 122 was requested 
+122 piece took  907.132325ms
+Piece 123 was requested 
+123 piece took  266.766312ms
+Piece 124 was requested 
+124 piece took  869.330486ms
+Piece 125 was requested 
+125 piece took  903.916979ms
+Piece 126 was requested 
+126 piece took  741.816274ms
+Piece 127 was requested 
+checking movies>>>>>>>>>>>
+127 piece took  806.297238ms
+Piece 128 was requested 
+128 piece took  259.933484ms
+Piece 129 was requested 
+start 19014656 bytes=19014656-
+end 21014655
+>>>>>>>.------------- 18 19014656 0 601
+****** 18
+[255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 128 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 128]
+------------->>>>>>>>>>>>> 2000000 19014656 21014655
+129 piece took  891.459482ms
+Piece 130 was requested 
+Piece 131 was requested 
+Piece 132 was requested 
+Piece 133 was requested 
+Piece 134 was requested 
+Piece 135 was requested 
+Piece 136 was requested 
+Piece 137 was requested 
+Piece 138 was requested 
+Piece 139 was requested 
+Piece 140 was requested 
+136 piece took  923.630306ms
+Piece 130 was requested 
+132 piece took  1.008369741s
+Piece 130 was requested 
+130 piece took  1.648764717s
+Piece 131 was requested 
+138 piece took  1.778902455s
+Piece 131 was requested 
+139 piece took  2.67263638s
+Piece 131 was requested 
+131 piece took  3.005688916s
+Piece 133 was requested 
+140 piece took  3.556695254s
+Piece 133 was requested 
+133 piece took  4.043567332s
+Piece 134 was requested 
+134 piece took  4.846309068s
+Piece 135 was requested 
+135 piece took  266.660772ms
+Piece 137 was requested 
+137 piece took  5.921261349s
+Piece 141 was requested 
+141 piece took  1.080299904s
+Piece 142 was requested 
+142 piece took  1.25026429s
+Piece 143 was requested 
+checking movies>>>>>>>>>>>
+143 piece took  895.35231ms
+Piece 144 was requested 
+144 piece took  663.073437ms
+Piece 145 was requested 
+start 21014656 bytes=21014656-
+end 23014655
+>>>>>>>.------------- 20 21014656 0 601
+****** 20
+[255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 128 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 128]
+------------->>>>>>>>>>>>> 2000000 21014656 23014655
+145 piece took  1.191083197s
+Piece 146 was requested 
+Piece 147 was requested 
+Piece 148 was requested 
+Piece 149 was requested 
+Piece 150 was requested 
+Piece 151 was requested 
+Piece 152 was requested 
+Piece 153 was requested 
+Piece 154 was requested 
+Piece 155 was requested 
+Piece 156 was requested 
+146 piece took  761.250373ms
+Piece 147 was requested 
+148 piece took  974.851055ms
+Piece 147 was requested 
+147 piece took  1.050904653s
+Piece 149 was requested 
+149 piece took  1.14575525s
+Piece 150 was requested 
+152 piece took  1.718312696s
+Piece 150 was requested 
+150 piece took  2.049207227s
+Piece 151 was requested 
+151 piece took  2.058094942s
+Piece 153 was requested 
+153 piece took  2.1956281s
+Piece 154 was requested 
+156 piece took  2.864643981s
+Piece 154 was requested 
+155 piece took  3.059277886s
+Piece 154 was requested 
+154 piece took  3.376708293s
+Piece 157 was requested 
+3000 158
+3000 194
+start 23014656 bytes=23014656-
+end 25014655
+>>>>>>>.------------- 21 23014656 0 601
+****** 21
+[255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 248 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 128]
+------------->>>>>>>>>>>>> 2000000 23014656 25014655
+checking movies>>>>>>>>>>>
+Piece 157 was requested 
+Piece 158 was requested 
+Piece 159 was requested 
+Piece 160 was requested 
+Piece 161 was requested 
+Piece 162 was requested 
+Piece 163 was requested 
+Piece 164 was requested 
+Piece 165 was requested 
+Piece 166 was requested 
+162 piece took  263.314834ms
+Piece 157 was requested 
+165 piece took  530.858735ms
+Piece 157 was requested 
+157 piece took  559.473315ms
+Piece 158 was requested 
+159 piece took  852.04884ms
+Piece 158 was requested 
+161 piece took  1.614747333s
+Piece 158 was requested 
+3000 200
+163 piece took  2.465927389s
+Piece 158 was requested 
+cur peers 56
+158 piece took  1.116086135s
+Piece 160 was requested 
+164 piece took  3.241179809s
+Piece 160 was requested 
+160 piece took  265.67625ms
+Piece 166 was requested 
+166 piece took  3.912439061s
+Piece 167 was requested 
+167 piece took  2.526077788s
+Piece 168 was requested 
+168 piece took  1.941856556s
+Piece 169 was requested 
+169 piece took  835.007263ms
+Piece 170 was requested 
+checking movies>>>>>>>>>>>
+170 piece took  984.464274ms
+Piece 171 was requested 
+171 piece took  669.725396ms
+Piece 172 was requested 
+172 piece took  825.466735ms
+Piece 173 was requested 
+173 piece took  1.082746185s
+Piece 174 was requested 
+174 piece took  1.235283129s
+Piece 175 was requested 
+175 piece took  952.585478ms
+Piece 176 was requested 
+176 piece took  798.582423ms
+Piece 177 was requested 
+177 piece took  784.102593ms
+Piece 178 was requested 
+178 piece took  1.13810508s
+Piece 179 was requested 
+start 25014656 bytes=25014656-
+end 27014655
+>>>>>>>.------------- 23 25014656 0 601
+****** 23
+[255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 224 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 128]
+------------->>>>>>>>>>>>> 2000000 25014656 27014655
+179 piece took  951.813311ms
+Piece 180 was requested 
+Piece 181 was requested 
+Piece 182 was requested 
+Piece 183 was requested 
+Piece 184 was requested 
+Piece 185 was requested 
+Piece 186 was requested 
+Piece 187 was requested 
+Piece 188 was requested 
+Piece 189 was requested 
+Piece 190 was requested 
+180 piece took  261.809022ms
+Piece 181 was requested 
+181 piece took  499.647059ms
+Piece 182 was requested 
+184 piece took  826.053086ms
+Piece 182 was requested 
+182 piece took  873.63174ms
+Piece 183 was requested 
+checking movies>>>>>>>>>>>
+187 piece took  1.345551526s
+Piece 183 was requested 
+185 piece took  1.626320522s
+Piece 183 was requested 
+183 piece took  1.740487407s
+Piece 186 was requested 
+186 piece took  2.420370328s
+Piece 188 was requested 
+188 piece took  2.528466082s
+Piece 189 was requested 
+190 piece took  3.277813473s
+Piece 189 was requested 
+189 piece took  3.286966011s
+Piece 191 was requested 
+start 27014656 bytes=27014656-
+end 29014655
+>>>>>>>.------------- 25 27014656 0 601
+****** 25
+[255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 254 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 128]
+------------->>>>>>>>>>>>> 2000000 27014656 29014655
+Piece 191 was requested 
+Piece 192 was requested 
+Piece 193 was requested 
+Piece 194 was requested 
+Piece 195 was requested 
+Piece 196 was requested 
+Piece 197 was requested 
+Piece 198 was requested 
+Piece 199 was requested 
+Piece 200 was requested 
+191 piece took  3.7960373s
+Piece 192 was requested 
+194 piece took  901.67606ms
+Piece 192 was requested 
+193 piece took  974.874149ms
+Piece 192 was requested 
+195 piece took  1.56000942s
+Piece 192 was requested 
+192 piece took  1.748033216s
+Piece 196 was requested 
+196 piece took  2.039045859s
+Piece 197 was requested 
+198 piece took  2.517262676s
+Piece 197 was requested 
+197 piece took  2.671512748s
+Piece 199 was requested 
+200 piece took  2.99236018s
+Piece 199 was requested 
+199 piece took  3.587705584s
+Piece 201 was requested 
+3000 158
+3000 194
+3000 32
+3000 200
+checking movies>>>>>>>>>>>
+201 piece took  3.595613455s
+Piece 202 was requested 
+3000 236
+cur peers 77
+202 piece took  686.206053ms
+Piece 203 was requested 
+203 piece took  268.325068ms
+Piece 204 was requested 
+204 piece took  239.837015ms
+Piece 205 was requested 
+205 piece took  254.02732ms
+Piece 206 was requested 
+206 piece took  234.960348ms
+Piece 207 was requested 
+207 piece took  918.507808ms
+Piece 208 was requested 
+208 piece took  1.172202482s
+Piece 209 was requested 
+209 piece took  241.436226ms
+Piece 210 was requested 
+210 piece took  988.545753ms
+Piece 211 was requested 
+start 29014656 bytes=29014656-
+end 31014655
+>>>>>>>.------------- 27 29014656 0 601
+****** 27
+[255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 224 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 128]
+------------->>>>>>>>>>>>> 2000000 29014656 31014655
+Piece 211 was requested 
+Piece 212 was requested 
+Piece 213 was requested 
+Piece 214 was requested 
+Piece 215 was requested 
+Piece 216 was requested 
+Piece 217 was requested 
+Piece 218 was requested 
+Piece 219 was requested 
+Piece 220 was requested 
+211 piece took  1.550745507s
+Piece 212 was requested 
+213 piece took  281.344731ms
+Piece 212 was requested 
+214 piece took  518.424784ms
+Piece 212 was requested 
+215 piece took  755.197664ms
+Piece 212 was requested 
+220 piece took  756.644333ms
+Piece 212 was requested 
+checking movies>>>>>>>>>>>
+217 piece took  989.966355ms
+Piece 212 was requested 
+218 piece took  1.029759002s
+Piece 212 was requested 
+219 piece took  1.354189346s
+Piece 212 was requested 
+212 piece took  2.152482178s
+Piece 216 was requested 
+216 piece took  2.658493947s
+Piece 221 was requested 
+start 31014656 bytes=31014656-
+end 33014655
+>>>>>>>.------------- 29 31014656 0 601
+****** 29
+[255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 248 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 128]
+------------->>>>>>>>>>>>> 2000000 31014656 33014655
+Piece 221 was requested 
+Piece 222 was requested 
+Piece 223 was requested 
+Piece 224 was requested 
+Piece 225 was requested 
+Piece 226 was requested 
+Piece 227 was requested 
+Piece 228 was requested 
+Piece 229 was requested 
+Piece 230 was requested 
+224 piece took  768.784723ms
+Piece 221 was requested 
+223 piece took  1.243438354s
+Piece 221 was requested 
+225 piece took  1.529573956s
+Piece 221 was requested 
+221 piece took  1.0303474s
+Piece 222 was requested 
+226 piece took  2.333395512s
+Piece 222 was requested 
+222 piece took  887.035586ms
+Piece 227 was requested 
+227 piece took  3.078768991s
+Piece 228 was requested 
+228 piece took  525.540875ms
+Piece 229 was requested 
+229 piece took  224.448282ms
+Piece 230 was requested 
+230 piece took  4.627304613s
+Piece 231 was requested 
+231 piece took  240.571166ms
+Piece 232 was requested 
+232 piece took  237.048813ms
+Piece 233 was requested 
+checking movies>>>>>>>>>>>
+233 piece took  2.688914725s
+Piece 234 was requested 
+234 piece took  539.152725ms
+Piece 235 was requested 
+235 piece took  326.107342ms
+Piece 236 was requested 
+236 piece took  1.070333557s
+Piece 237 was requested 
+237 piece took  1.25820325s
+Piece 238 was requested 
+238 piece took  959.121027ms
+Piece 239 was requested 
+239 piece took  596.46742ms
+Piece 240 was requested 
+240 piece took  1.024242651s
+Piece 241 was requested 
+241 piece took  1.056669334s
+Piece 242 was requested 
+242 piece took  806.171281ms
+Piece 243 was requested 
+243 piece took  476.28457ms
+Piece 244 was requested 
+3000 158
+3000 182
+3000 200
+checking movies>>>>>>>>>>>
+start 33014656 bytes=33014656-
+end 35014655
+>>>>>>>.------------- 31 33014656 0 601
+****** 31
+[255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 240 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 128]
+------------->>>>>>>>>>>>> 2000000 33014656 35014655
+244 piece took  1.143719616s
+Piece 245 was requested 
+Piece 246 was requested 
+Piece 247 was requested 
+Piece 248 was requested 
+Piece 249 was requested 
+Piece 250 was requested 
+Piece 251 was requested 
+Piece 252 was requested 
+Piece 253 was requested 
+Piece 254 was requested 
+Piece 255 was requested 
+247 piece took  269.543032ms
+Piece 245 was requested 
+3000 236
+245 piece took  504.189327ms
+Piece 246 was requested 
+248 piece took  506.947485ms
+Piece 246 was requested 
+250 piece took  762.576085ms
+Piece 246 was requested 
+251 piece took  867.277162ms
+Piece 246 was requested 
+246 piece took  1.022770979s
+Piece 249 was requested 
+254 piece took  1.028915717s
+Piece 249 was requested 
+249 piece took  1.323145398s
+Piece 252 was requested 
+252 piece took  1.342544444s
+Piece 253 was requested 
+255 piece took  1.753756285s
+Piece 253 was requested 
+253 piece took  684.911006ms
+Piece 256 was requested 
+cur peers 77
+start 35014656 bytes=35014656-
+end 37014655
+>>>>>>>.------------- 33 35014656 0 601
+****** 33
+[255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 128]
+------------->>>>>>>>>>>>> 2000000 35014656 37014655
+Piece 256 was requested 
+Piece 257 was requested 
+Piece 258 was requested 
+Piece 259 was requested 
+Piece 260 was requested 
+Piece 261 was requested 
+Piece 262 was requested 
+Piece 263 was requested 
+Piece 264 was requested 
+Piece 265 was requested 
+256 piece took  268.068096ms
+Piece 257 was requested 
+257 piece took  535.857071ms
+Piece 258 was requested 
+258 piece took  829.353663ms
+Piece 259 was requested 
+259 piece took  870.347979ms
+Piece 260 was requested 
+260 piece took  1.066675555s
+Piece 261 was requested 
+262 piece took  1.261537667s
+Piece 261 was requested 
+261 piece took  1.33144178s
+Piece 263 was requested 
+263 piece took  1.600973362s
+Piece 264 was requested 
+264 piece took  1.626944928s
+Piece 265 was requested 
+265 piece took  995.092533ms
+Piece 266 was requested 
+checking movies>>>>>>>>>>>
+266 piece took  1.030476888s
+Piece 267 was requested 
+267 piece took  261.605913ms
+Piece 268 was requested 
+268 piece took  587.878711ms
+Piece 269 was requested 
+269 piece took  475.02842ms
+Piece 270 was requested 
+start 37014656 bytes=37014656-
+end 39014655
+>>>>>>>.------------- 35 37014656 0 601
+****** 35
+[255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 252 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 128]
+------------->>>>>>>>>>>>> 2000000 37014656 39014655
+Piece 270 was requested 
+Piece 271 was requested 
+Piece 272 was requested 
+Piece 273 was requested 
+Piece 274 was requested 
+Piece 275 was requested 
+Piece 276 was requested 
+Piece 277 was requested 
+Piece 278 was requested 
+Piece 279 was requested 
+270 piece took  1.171778403s
+Piece 271 was requested 
+273 piece took  341.971813ms
+Piece 271 was requested 
+274 piece took  649.689382ms
+Piece 271 was requested 
+275 piece took  915.923024ms
+Piece 271 was requested 
+271 piece took  1.166861957s
+Piece 272 was requested 
+277 piece took  1.181894202s
+Piece 272 was requested 
+278 piece took  1.4201596s
+Piece 272 was requested 
+272 piece took  1.569462705s
+Piece 276 was requested 
+276 piece took  1.976801943s
+Piece 279 was requested 
+279 piece took  2.358153311s
+Piece 280 was requested 
+280 piece took  4.58229965s
+Piece 281 was requested 
+checking movies>>>>>>>>>>>
+281 piece took  756.764548ms
+Piece 282 was requested 
+282 piece took  273.467541ms
+Piece 283 was requested 
+283 piece took  494.812752ms
+Piece 284 was requested 
+284 piece took  2.68015898s
+Piece 285 was requested 
+285 piece took  269.229365ms
+Piece 286 was requested 
+286 piece took  1.486770396s
+Piece 287 was requested 
+287 piece took  282.703258ms
+Piece 288 was requested 
+288 piece took  238.83951ms
+Piece 289 was requested 
+289 piece took  768.810632ms
+Piece 290 was requested 
+290 piece took  262.358259ms
+Piece 291 was requested 
+291 piece took  239.096076ms
+Piece 292 was requested 
+3000 158
+3000 182
+292 piece took  1.467107545s
+start 39014656 bytes=39014656-
+end 41014655
+>>>>>>>.------------- 37 39014656 0 601
+****** 37
+[255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 248 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 128]
+Piece 293 was requested 
+Piece 294 was requested 
+Piece 295 was requested 
+Piece 296 was requested 
+Piece 297 was requested 
+Piece 298 was requested 
+Piece 299 was requested 
+Piece 300 was requested 
+Piece 301 was requested 
+Piece 302 was requested 
+------------->>>>>>>>>>>>> 2000000 39014656 41014655
+296 piece took  238.799782ms
+Piece 293 was requested 
+3000 32
+297 piece took  431.700853ms
+Piece 293 was requested 
+299 piece took  699.14388ms
+Piece 293 was requested 
+checking movies>>>>>>>>>>>
+293 piece took  778.342997ms
+Piece 294 was requested 
+301 piece took  965.077575ms
+Piece 294 was requested 
+295 piece took  1.161037718s
+Piece 294 was requested 
+294 piece took  475.617005ms
+Piece 298 was requested 
+298 piece took  1.234778185s
+Piece 300 was requested 
+300 piece took  1.555942143s
+Piece 302 was requested 
+302 piece took  2.681608408s
+Piece 303 was requested 
+3000 242
+303 piece took  1.211403205s
+Piece 304 was requested 
+cur peers 56
+304 piece took  386.346587ms
+Piece 305 was requested 
+305 piece took  1.441739371s
+Piece 306 was requested 
+306 piece took  261.852352ms
+Piece 307 was requested 
+307 piece took  1.156589151s
+Piece 308 was requested 
+308 piece took  237.793718ms
+Piece 309 was requested 
+309 piece took  242.214589ms
+Piece 310 was requested 
+310 piece took  265.371089ms
+Piece 311 was requested 
+311 piece took  808.98236ms
+Piece 312 was requested 
+312 piece took  1.501779487s
+Piece 313 was requested 
+313 piece took  269.939116ms
+Piece 314 was requested 
+checking movies>>>>>>>>>>>
+314 piece took  236.31766ms
+Piece 315 was requested 
+315 piece took  769.666695ms
+Piece 316 was requested 
+316 piece took  274.102281ms
+Piece 317 was requested 
+317 piece took  1.183087461s
+Piece 318 was requested 
+318 piece took  1.128988471s
+Piece 319 was requested 
+start 41014656 bytes=41014656-
+end 43014655
+>>>>>>>.------------- 39 41014656 0 601
+****** 39
+[255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 254 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 128]
+------------->>>>>>>>>>>>> 2000000 41014656 43014655
+319 piece took  767.605661ms
+Piece 320 was requested 
+Piece 321 was requested 
+Piece 322 was requested 
+Piece 323 was requested 
+Piece 324 was requested 
+Piece 325 was requested 
+Piece 326 was requested 
+Piece 327 was requested 
+Piece 328 was requested 
+Piece 329 was requested 
+Piece 330 was requested 
+327 piece took  271.803207ms
+Piece 320 was requested 
+320 piece took  535.453092ms
+Piece 321 was requested 
+Piece 322 was requested 
+321 piece took  935.359302ms
+Piece 322 was requested 
+322 piece took  1.050716317s
+Piece 323 was requested 
+328 piece took  1.239976977s
+Piece 323 was requested 
+323 piece took  1.333106316s
+Piece 324 was requested 
+324 piece took  1.735755224s
+Piece 325 was requested 
+325 piece took  260.082133ms
+Piece 326 was requested 
+326 piece took  238.017757ms
+Piece 329 was requested 
+329 piece took  2.428252762s
+Piece 330 was requested 
+330 piece took  500.367108ms
+Piece 331 was requested 
+331 piece took  1.468412201s
+Piece 332 was requested 
+332 piece took  384.36198ms
+Piece 333 was requested 
+checking movies>>>>>>>>>>>
+Piece 333 was requested 
+333 piece took  6.089050415s
+Piece 334 was requested 
+Piece 334 was requested 
+3000 182
+3000 140
+334 piece took  4.360590938s
+Piece 335 was requested 
+start 43014656 bytes=43014656-
+end 45014655
+>>>>>>>.------------- 41 43014656 0 601
+****** 41
+[255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 254 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 128]
+------------->>>>>>>>>>>>> 2000000 43014656 45014655
+335 piece took  265.259499ms
+Piece 336 was requested 
+Piece 337 was requested 
+Piece 338 was requested 
+Piece 339 was requested 
+Piece 340 was requested 
+Piece 341 was requested 
+Piece 342 was requested 
+Piece 343 was requested 
+Piece 344 was requested 
+Piece 345 was requested 
+Piece 346 was requested 
+checking movies>>>>>>>>>>>
+336 piece took  238.154678ms
+Piece 337 was requested 
+337 piece took  498.243879ms
+Piece 338 was requested 
+338 piece took  569.712841ms
+Piece 339 was requested 
+3000 236
+340 piece took  736.129251ms
+Piece 339 was requested 
+339 piece took  948.432187ms
+Piece 341 was requested 
+342 piece took  1.003506251s
+Piece 341 was requested 
+344 piece took  1.101531251s
+Piece 341 was requested 
+345 piece took  1.315907309s
+Piece 341 was requested 
+341 piece took  1.423330051s
+Piece 343 was requested 
+346 piece took  1.553365001s
+Piece 343 was requested 
+343 piece took  1.932698109s
+Piece 347 was requested 
+347 piece took  1.368495513s
+Piece 348 was requested 
+cur peers 54
+348 piece took  637.20304ms
+Piece 349 was requested 
+349 piece took  278.776862ms
+Piece 350 was requested 
+350 piece took  268.16523ms
+Piece 351 was requested 
+Piece 351 was requested 
+351 piece took  5.24885393s
+Piece 352 was requested 
+checking movies>>>>>>>>>>>
+Piece 352 was requested 
+352 piece took  3.661275242s
+Piece 353 was requested 
+353 piece took  993.336924ms
+Piece 354 was requested 
+354 piece took  275.293704ms
+Piece 355 was requested 
+355 piece took  223.132354ms
+Piece 356 was requested 
+356 piece took  665.347635ms
+Piece 357 was requested 
+357 piece took  336.077926ms
+Piece 358 was requested 
+358 piece took  573.840036ms
+Piece 359 was requested 
+359 piece took  271.226236ms
+Piece 360 was requested 
+360 piece took  668.544346ms
+Piece 361 was requested 
+361 piece took  264.600826ms
+Piece 362 was requested 
+362 piece took  238.170866ms
+Piece 363 was requested 
+363 piece took  237.725362ms
+Piece 364 was requested 
+364 piece took  858.710966ms
+Piece 365 was requested 
+365 piece took  267.943487ms
+Piece 366 was requested 
+366 piece took  272.488132ms
+Piece 367 was requested 
+checking movies>>>>>>>>>>>
+367 piece took  759.98246ms
+Piece 368 was requested 
+Piece 368 was requested 
+start 45014656 bytes=45014656-
+end 47014655
+>>>>>>>.------------- 42 45014656 0 601
+****** 42
+[255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 128]
+------------->>>>>>>>>>>>> 2000000 45014656 47014655
+368 piece took  5.179722799s
+Piece 369 was requested 
+Piece 370 was requested 
+Piece 371 was requested 
+Piece 372 was requested 
+Piece 373 was requested 
+Piece 374 was requested 
+Piece 375 was requested 
+Piece 376 was requested 
+Piece 377 was requested 
+Piece 378 was requested 
+Piece 379 was requested 
+371 piece took  359.971287ms
+Piece 369 was requested 
+372 piece took  685.912509ms
+Piece 369 was requested 
+374 piece took  1.064829062s
+Piece 369 was requested 
+369 piece took  1.070101408s
+Piece 370 was requested 
+377 piece took  1.379917506s
+Piece 370 was requested 
+Piece 370 was requested 
+370 piece took  1.002790235s
+Piece 373 was requested 
+373 piece took  2.116204178s
+Piece 375 was requested 
+375 piece took  237.140536ms
+Piece 376 was requested 
+3000 152
+3000 182
+378 piece took  4.144419231s
+Piece 376 was requested 
+3000 200
+376 piece took  268.383134ms
+Piece 379 was requested 
+checking movies>>>>>>>>>>>
+379 piece took  5.125060746s
+Piece 380 was requested 
+start 47014656 bytes=47014656-
+end 49014655
+>>>>>>>.------------- 44 47014656 0 601
+****** 44
+[255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 240 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 128]
+------------->>>>>>>>>>>>> 2000000 47014656 49014655
+Piece 380 was requested 
+Piece 381 was requested 
+Piece 382 was requested 
+Piece 383 was requested 
+Piece 384 was requested 
+Piece 385 was requested 
+Piece 386 was requested 
+Piece 387 was requested 
+Piece 388 was requested 
+Piece 389 was requested 
+380 piece took  265.393184ms
+Piece 381 was requested 
+386 piece took  603.176327ms
+3000 236
+cur peers 75
+Piece 381 was requested 
+388 piece took  934.951644ms
+Piece 381 was requested 
+381 piece took  901.191498ms
+Piece 382 was requested 
+382 piece took  3.029009752s
+Piece 383 was requested 
+383 piece took  3.693250189s
+Piece 384 was requested 
+384 piece took  4.26373041s
+Piece 385 was requested 
+385 piece took  5.224707024s
+Piece 387 was requested 
+387 piece took  266.549536ms
+Piece 389 was requested 
+389 piece took  267.095831ms
+Piece 390 was requested 
+390 piece took  1.555870294s
+Piece 391 was requested 
+checking movies>>>>>>>>>>>
+391 piece took  706.579021ms
+Piece 392 was requested 
+392 piece took  1.289084033s
+Piece 393 was requested 
+393 piece took  664.422557ms
+Piece 394 was requested 
+394 piece took  400.982418ms
+Piece 395 was requested 
+395 piece took  266.869333ms
+Piece 396 was requested 
+396 piece took  792.294359ms
+Piece 397 was requested 
+397 piece took  1.070483745s
+Piece 398 was requested 
+398 piece took  806.39224ms
+Piece 399 was requested 
+399 piece took  269.052662ms
+Piece 400 was requested 
+400 piece took  237.774543ms
+Piece 401 was requested 
+401 piece took  238.825107ms
+Piece 402 was requested 
+402 piece took  968.960092ms
+Piece 403 was requested 
+403 piece took  894.620654ms
+Piece 404 was requested 
+404 piece took  796.673047ms
+Piece 405 was requested 
+405 piece took  467.339096ms
+Piece 406 was requested 
+406 piece took  401.703689ms
+Piece 407 was requested 
+checking movies>>>>>>>>>>>
+407 piece took  401.826136ms
+Piece 408 was requested 
+408 piece took  269.830038ms
+Piece 409 was requested 
+start 49014656 bytes=49014656-
+end 51014655
+>>>>>>>.------------- 46 49014656 0 601
+****** 46
+[255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 128 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 128]
+------------->>>>>>>>>>>>> 2000000 49014656 51014655
+Piece 409 was requested 
+Piece 409 was requested 
+Piece 410 was requested 
+Piece 411 was requested 
+Piece 412 was requested 
+Piece 413 was requested 
+Piece 414 was requested 
+Piece 415 was requested 
+Piece 416 was requested 
+Piece 417 was requested 
+Piece 418 was requested 
+413 piece took  801.863568ms
+Piece 409 was requested 
+410 piece took  1.166434048s
+Piece 409 was requested 
+415 piece took  1.220281915s
+Piece 409 was requested 
+409 piece took  394.164969ms
+Piece 411 was requested 
+411 piece took  291.883047ms
+Piece 412 was requested 
+412 piece took  516.997083ms
+Piece 414 was requested 
+414 piece took  290.570216ms
+Piece 416 was requested 
+3000 152
+3000 182
+418 piece took  4.172512016s
+Piece 416 was requested 
+3000 200
+3000 26
+416 piece took  767.526063ms
+Piece 417 was requested 
+checking movies>>>>>>>>>>>
+3000 236
+cur peers 75
+start 51014656 bytes=51014656-
+end 53014655
+>>>>>>>.------------- 48 51014656 0 601
+****** 48
+[255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 160 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 128]
+------------->>>>>>>>>>>>> 2000000 51014656 53014655
+Piece 417 was requested 
+Piece 419 was requested 
+Piece 420 was requested 
+Piece 421 was requested 
+Piece 422 was requested 
+Piece 423 was requested 
+Piece 424 was requested 
+Piece 425 was requested 
+Piece 426 was requested 
+Piece 427 was requested 
+420 piece took  829.633465ms
+Piece 417 was requested 
+417 piece took  929.205319ms
+Piece 419 was requested 
+422 piece took  1.103141288s
+Piece 419 was requested 
+421 piece took  1.330351731s
+Piece 419 was requested 
+419 piece took  344.408957ms
+Piece 423 was requested 
+424 piece took  2.120697642s
+Piece 423 was requested 
+423 piece took  2.194230694s
+Piece 425 was requested 
+425 piece took  265.546466ms
+Piece 426 was requested 
+427 piece took  3.840240526s
+Piece 426 was requested 
+426 piece took  1.166713506s
+Piece 428 was requested 
+checking movies>>>>>>>>>>>
+428 piece took  1.082426312s
+Piece 429 was requested 
+start 53014656 bytes=53014656-
+end 55014655
+>>>>>>>.------------- 50 53014656 0 601
+****** 50
+[255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 248 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 128]
+------------->>>>>>>>>>>>> 2000000 53014656 55014655
+Piece 429 was requested 
+Piece 430 was requested 
+Piece 431 was requested 
+Piece 432 was requested 
+Piece 433 was requested 
+Piece 434 was requested 
+Piece 435 was requested 
+Piece 436 was requested 
+Piece 437 was requested 
+Piece 438 was requested 
+430 piece took  947.145939ms
+Piece 429 was requested 
+433 piece took  1.097146573s
+Piece 429 was requested 
+432 piece took  1.147632257s
+Piece 429 was requested 
+429 piece took  272.024304ms
+Piece 431 was requested 
+431 piece took  1.667533566s
+Piece 434 was requested 
+434 piece took  284.354188ms
+Piece 435 was requested 
+435 piece took  2.226246742s
+Piece 436 was requested 
+436 piece took  263.308421ms
+Piece 437 was requested 
+checking movies>>>>>>>>>>>
+437 piece took  3.036583093s
+Piece 438 was requested 
+Piece 438 was requested 
+438 piece took  1.897619384s
+Piece 439 was requested 
+start 55014656 bytes=55014656-
+end 57014655
+>>>>>>>.------------- 52 55014656 0 601
+****** 52
+[255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 254 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 128]
+------------->>>>>>>>>>>>> 2000000 55014656 57014655
+439 piece took  568.580574ms
+Piece 440 was requested 
+Piece 441 was requested 
+Piece 442 was requested 
+Piece 443 was requested 
+Piece 444 was requested 
+Piece 445 was requested 
+Piece 446 was requested 
+Piece 447 was requested 
+Piece 448 was requested 
+Piece 449 was requested 
+Piece 450 was requested 
+440 piece took  268.037467ms
+Piece 441 was requested 
+443 piece took  527.961215ms
+Piece 441 was requested 
+441 piece took  569.066277ms
+Piece 442 was requested 
+444 piece took  762.927687ms
+Piece 442 was requested 
+446 piece took  1.015992685s
+Piece 442 was requested 
+449 piece took  1.053193767s
+Piece 442 was requested 
+442 piece took  1.061631275s
+Piece 445 was requested 
+448 piece took  1.08202852s
+Piece 445 was requested 
+445 piece took  1.534444808s
+Piece 447 was requested 
+447 piece took  1.936252898s
+Piece 450 was requested 
+450 piece took  2.150146437s
+Piece 451 was requested 
+451 piece took  604.212741ms
+Piece 452 was requested 
+452 piece took  277.444611ms
+Piece 453 was requested 
+453 piece took  591.349004ms
+Piece 454 was requested 
+454 piece took  492.894148ms
+Piece 455 was requested 
+455 piece took  381.281209ms
+Piece 456 was requested 
+456 piece took  495.893151ms
+Piece 457 was requested 
+457 piece took  1.387370363s
+Piece 458 was requested 
+3000 182
+3000 194
+458 piece took  801.903153ms
+Piece 459 was requested 
+checking movies>>>>>>>>>>>
+459 piece took  474.648837ms
+Piece 460 was requested 
+3000 236
+460 piece took  267.233324ms
+Piece 461 was requested 
+461 piece took  240.617214ms
+Piece 462 was requested 
+462 piece took  1.162026439s
+Piece 463 was requested 
+cur peers 72
+463 piece took  1.197925815s
+Piece 464 was requested 
+464 piece took  763.260975ms
+Piece 465 was requested 
+465 piece took  517.798829ms
+Piece 466 was requested 
+466 piece took  298.879107ms
+Piece 467 was requested 
+467 piece took  267.705993ms
+Piece 468 was requested 
+468 piece took  576.966233ms
+Piece 469 was requested 
+469 piece took  475.557628ms
+Piece 470 was requested 
+470 piece took  492.794607ms
+Piece 471 was requested 
+471 piece took  267.504146ms
+Piece 472 was requested 
+472 piece took  598.866363ms
+Piece 473 was requested 
+473 piece took  474.802136ms
+Piece 474 was requested 
+474 piece took  481.147966ms
+Piece 475 was requested 
+475 piece took  235.402883ms
+Piece 476 was requested 
+476 piece took  210.226756ms
+Piece 477 was requested 
+477 piece took  839.338003ms
+Piece 478 was requested 
+478 piece took  262.250246ms
+Piece 479 was requested 
+checking movies>>>>>>>>>>>
+479 piece took  224.344407ms
+Piece 480 was requested 
+480 piece took  1.511686744s
+Piece 481 was requested 
+481 piece took  758.899031ms
+Piece 482 was requested 
+482 piece took  243.073905ms
+Piece 483 was requested 
+483 piece took  267.157934ms
+Piece 484 was requested 
+484 piece took  588.510793ms
+Piece 485 was requested 
+start 57014656 bytes=57014656-
+end 59014655
+>>>>>>>.------------- 54 57014656 0 601
+****** 54
+[255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 248 0 0 0 0 0 0 0 0 0 0 0 0 0 0 128]
+------------->>>>>>>>>>>>> 2000000 57014656 59014655
+485 piece took  528.802118ms
+Piece 486 was requested 
+Piece 487 was requested 
+Piece 488 was requested 
+Piece 489 was requested 
+Piece 490 was requested 
+Piece 491 was requested 
+Piece 492 was requested 
+Piece 493 was requested 
+Piece 494 was requested 
+Piece 495 was requested 
+Piece 496 was requested 
+486 piece took  278.205489ms
+Piece 487 was requested 
+487 piece took  474.038766ms
+Piece 488 was requested 
+490 piece took  538.459936ms
+Piece 488 was requested 
+492 piece took  778.919454ms
+Piece 488 was requested 
+488 piece took  967.475684ms
+Piece 489 was requested 
+495 piece took  1.020033295s
+Piece 489 was requested 
+494 piece took  1.229715608s
+Piece 489 was requested 
+489 piece took  1.444346016s
+Piece 491 was requested 
+493 piece took  1.935760127s
+Piece 491 was requested 
+491 piece took  2.035225735s
+Piece 496 was requested 
+496 piece took  598.013172ms
+Piece 497 was requested 
+497 piece took  249.793261ms
+Piece 498 was requested 
+498 piece took  1.110806183s
+Piece 499 was requested 
+499 piece took  267.221152ms
+Piece 500 was requested 
+500 piece took  603.594759ms
+Piece 501 was requested 
+501 piece took  426.600607ms
+Piece 502 was requested 
+checking movies>>>>>>>>>>>
+502 piece took  1.130334216s
+Piece 503 was requested 
+503 piece took  268.315263ms
+Piece 504 was requested 
+504 piece took  826.566888ms
+Piece 505 was requested 
+505 piece took  242.084962ms
+Piece 506 was requested 
+506 piece took  207.461788ms
+Piece 507 was requested 
+507 piece took  494.241528ms
+Piece 508 was requested 
+508 piece took  268.914217ms
+Piece 509 was requested 
+509 piece took  403.507105ms
+Piece 510 was requested 
+510 piece took  402.585993ms
+Piece 511 was requested 
+511 piece took  379.789678ms
+Piece 512 was requested 
+512 piece took  406.433496ms
+Piece 513 was requested 
+513 piece took  268.873339ms
+Piece 514 was requested 
+514 piece took  402.221015ms
+Piece 515 was requested 
+515 piece took  401.273346ms
+Piece 516 was requested 
+516 piece took  402.677586ms
+Piece 517 was requested 
+517 piece took  281.222766ms
+Piece 518 was requested 
+518 piece took  428.303118ms
+Piece 519 was requested 
+519 piece took  236.463173ms
+Piece 520 was requested 
+520 piece took  307.2374ms
+Piece 521 was requested 
+521 piece took  263.863339ms
+Piece 522 was requested 
+start 59014656 bytes=59014656-
+end 61014655
+>>>>>>>.------------- 56 59014656 0 601
+****** 56
+[255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 192 0 0 0 0 0 0 0 0 0 128]
+------------->>>>>>>>>>>>> 2000000 59014656 61014655
+522 piece took  1.028019064s
+Piece 523 was requested 
+Piece 524 was requested 
+Piece 525 was requested 
+Piece 526 was requested 
+Piece 527 was requested 
+Piece 528 was requested 
+Piece 529 was requested 
+Piece 530 was requested 
+Piece 531 was requested 
+Piece 532 was requested 
+Piece 533 was requested 
+524 piece took  361.74256ms
+Piece 523 was requested 
+525 piece took  580.406668ms
+Piece 523 was requested 
+3000 152
+3000 182
+523 piece took  804.698204ms
+Piece 526 was requested 
+526 piece took  852.478344ms
+Piece 527 was requested 
+527 piece took  1.114407968s
+3000 38
+Piece 528 was requested 
+3000 194
+530 piece took  1.268178976s
+Piece 528 was requested 
+528 piece took  1.379798708s
+Piece 529 was requested 
+checking movies>>>>>>>>>>>
+529 piece took  1.620041749s
+Piece 531 was requested 
+531 piece took  1.674220993s
+Piece 532 was requested 
+532 piece took  2.082927898s
+Piece 533 was requested 
+533 piece took  2.518601213s
+Piece 534 was requested 
+534 piece took  579.714549ms
+Piece 535 was requested 
+535 piece took  891.176882ms
+Piece 536 was requested 
+536 piece took  380.094055ms
+Piece 537 was requested 
+537 piece took  406.165592ms
+Piece 538 was requested 
+538 piece took  380.228083ms
+Piece 539 was requested 
+cur peers 74
+539 piece took  2.565418332s
+Piece 540 was requested 
+540 piece took  767.283992ms
+Piece 541 was requested 
+541 piece took  269.024481ms
+Piece 542 was requested 
+542 piece took  1.346249857s
+Piece 543 was requested 
+543 piece took  293.44336ms
+Piece 544 was requested 
+544 piece took  828.214273ms
+Piece 545 was requested 
+checking movies>>>>>>>>>>>
+545 piece took  254.18178ms
+Piece 546 was requested 
+546 piece took  206.557704ms
+Piece 547 was requested 
+547 piece took  268.199049ms
+Piece 548 was requested 
+548 piece took  492.008776ms
+Piece 549 was requested 
+549 piece took  381.652872ms
+Piece 550 was requested 
+550 piece took  269.36724ms
+Piece 551 was requested 
+551 piece took  237.565568ms
+Piece 552 was requested 
+552 piece took  239.173912ms
+Piece 553 was requested 
+553 piece took  240.872276ms
+Piece 554 was requested 
+554 piece took  1.689931727s
+Piece 555 was requested 
+555 piece took  765.999646ms
+Piece 556 was requested 
+556 piece took  1.69370948s
+Piece 557 was requested 
+557 piece took  761.228378ms
+Piece 558 was requested 
+558 piece took  313.32191ms
+Piece 559 was requested 
+559 piece took  1.396066309s
+Piece 560 was requested 
+560 piece took  279.368842ms
+Piece 561 was requested 
+561 piece took  214.577026ms
+Piece 562 was requested 
+562 piece took  267.482279ms
+Piece 563 was requested 
+checking movies>>>>>>>>>>>
+563 piece took  1.248305727s
+Piece 564 was requested 
+564 piece took  826.031866ms
+Piece 565 was requested 
+565 piece took  267.978547ms
+Piece 566 was requested 
+566 piece took  300.901614ms
+Piece 567 was requested 
+567 piece took  494.644791ms
+Piece 568 was requested 
+568 piece took  447.239118ms
+Piece 569 was requested 
+569 piece took  268.328413ms
+Piece 570 was requested 
+570 piece took  402.459781ms
+Piece 571 was requested 
+571 piece took  261.506422ms
+Piece 572 was requested 
+572 piece took  383.6186ms
+Piece 573 was requested 
+573 piece took  269.503342ms
+Piece 574 was requested 
+start 61014656 bytes=61014656-
+end 63014655
+>>>>>>>.------------- 58 61014656 0 601
+****** 58
+[255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 252 0 0 0 128]
+------------->>>>>>>>>>>>> 2000000 61014656 63014655
+574 piece took  1.473244479s
+Piece 575 was requested 
+Piece 576 was requested 
+Piece 577 was requested 
+Piece 578 was requested 
+Piece 579 was requested 
+Piece 580 was requested 
+Piece 581 was requested 
+Piece 582 was requested 
+Piece 583 was requested 
+Piece 584 was requested 
+Piece 585 was requested 
+576 piece took  269.58174ms
+Piece 575 was requested 
+581 piece took  527.566366ms
+Piece 575 was requested 
+575 piece took  759.382674ms
+Piece 577 was requested 
+577 piece took  279.418106ms
+Piece 578 was requested 
+585 piece took  1.4189639s
+Piece 578 was requested 
+582 piece took  1.482427643s
+Piece 578 was requested 
+578 piece took  1.542006835s
+Piece 579 was requested 
+579 piece took  267.312759ms
+Piece 580 was requested 
+580 piece took  2.345464042s
+Piece 583 was requested 
+3000 152
+3000 182
+584 piece took  2.7252224s
+Piece 583 was requested 
+583 piece took  2.753448093s
+Piece 586 was requested 
+checking movies>>>>>>>>>>>
+586 piece took  2.59514445s
+Piece 587 was requested 
+587 piece took  267.124897ms
+Piece 588 was requested 
+588 piece took  238.264713ms
+Piece 589 was requested 
+cur peers 37
+589 piece took  1.339472668s
+Piece 590 was requested 
+start 63014656 bytes=63014656-
+end 65014655
+>>>>>>>.------------- 60 63014656 0 601
+****** 60
+[255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 252 0 128]
+------------->>>>>>>>>>>>> 2000000 63014656 65014655
+Piece 590 was requested 
+Piece 591 was requested 
+Piece 592 was requested 
+Piece 593 was requested 
+Piece 594 was requested 
+Piece 595 was requested 
+Piece 596 was requested 
+Piece 597 was requested 
+Piece 598 was requested 
+Piece 599 was requested 
+590 piece took  1.303096419s
+Piece 591 was requested 
+591 piece took  544.284401ms
+Piece 592 was requested 
+596 piece took  762.00276ms
+Piece 592 was requested 
+592 piece took  779.948809ms
+Piece 593 was requested 
+595 piece took  1.078929716s
+Piece 593 was requested 
+598 piece took  1.223493695s
+Piece 593 was requested 
+599 piece took  1.347781788s
+Piece 593 was requested 
+597 piece took  1.372182511s
+Piece 593 was requested 
+593 piece took  1.537857354s
+Piece 594 was requested 
+594 piece took  3.089938557s
+clearing all peers
+checking movies>>>>>>>>>>>
+we are done ! 6m10.010325074s
+checking movies>>>>>>>>>>>
+start 65014656 bytes=65014656-
+end 67014655
+>>>>>>>.------------- 62 65014656 0 601
+****** 62
+[255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 128]
+------------->>>>>>>>>>>>> 2000000 65014656 67014655
+checking movies>>>>>>>>>>>
+start 67014656 bytes=67014656-
+end 69014655
+>>>>>>>.------------- 63 67014656 0 601
+****** 63
+[255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 128]
+------------->>>>>>>>>>>>> 2000000 67014656 69014655
+checking movies>>>>>>>>>>>
+checking movies>>>>>>>>>>>
+start 69014656 bytes=69014656-
+end 71014655
+>>>>>>>.------------- 65 69014656 0 601
+****** 65
+[255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 128]
+------------->>>>>>>>>>>>> 2000000 69014656 71014655
+start 71014656 bytes=71014656-
+end 73014655
+>>>>>>>.------------- 67 71014656 0 601
+****** 67
+[255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 128]
+------------->>>>>>>>>>>>> 2000000 71014656 73014655
+checking movies>>>>>>>>>>>
+checking movies>>>>>>>>>>>
+checking movies>>>>>>>>>>>
+start 73014656 bytes=73014656-
+end 75014655
+>>>>>>>.------------- 69 73014656 0 601
+****** 69
+[255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 128]
+------------->>>>>>>>>>>>> 2000000 73014656 75014655
+checking movies>>>>>>>>>>>
+start 75014656 bytes=75014656-
+end 77014655
+>>>>>>>.------------- 71 75014656 0 601
+****** 71
+[255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 128]
+------------->>>>>>>>>>>>> 2000000 75014656 77014655
+checking movies>>>>>>>>>>>
+checking movies>>>>>>>>>>>
+checking movies>>>>>>>>>>>
+start 77014656 bytes=77014656-
+end 79014655
+>>>>>>>.------------- 73 77014656 0 601
+****** 73
+[255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 128]
+------------->>>>>>>>>>>>> 2000000 77014656 79014655
+checking movies>>>>>>>>>>>
+checking movies>>>>>>>>>>>
+start 79014656 bytes=79014656-
+end 81014655
+>>>>>>>.------------- 75 79014656 0 601
+****** 75
+[255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 128]
+------------->>>>>>>>>>>>> 2000000 79014656 81014655
+start 81014656 bytes=81014656-
+end 83014655
+>>>>>>>.------------- 77 81014656 0 601
+****** 77
+[255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 128]
+------------->>>>>>>>>>>>> 2000000 81014656 83014655
+checking movies>>>>>>>>>>>
+checking movies>>>>>>>>>>>
+checking movies>>>>>>>>>>>
+start 83014656 bytes=83014656-
+end 85014655
+>>>>>>>.------------- 79 83014656 0 601
+****** 79
+[255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 128]
+------------->>>>>>>>>>>>> 2000000 83014656 85014655
+checking movies>>>>>>>>>>>
+checking movies>>>>>>>>>>>
+start 85014656 bytes=85014656-
+end 87014655
+>>>>>>>.------------- 81 85014656 0 601
+****** 81
+[255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 128]
+------------->>>>>>>>>>>>> 2000000 85014656 87014655
+checking movies>>>>>>>>>>>
+checking movies>>>>>>>>>>>
+checking movies>>>>>>>>>>>
+start 87014656 bytes=87014656-
+end 89014655
+>>>>>>>.------------- 82 87014656 0 601
+****** 82
+[255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 128]
+------------->>>>>>>>>>>>> 2000000 87014656 89014655
+checking movies>>>>>>>>>>>
+start 89014656 bytes=89014656-
+end 91014655
+>>>>>>>.------------- 84 89014656 0 601
+****** 84
+[255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 128]
+------------->>>>>>>>>>>>> 2000000 89014656 91014655
+checking movies>>>>>>>>>>>
+checking movies>>>>>>>>>>>
+start 91014656 bytes=91014656-
+end 93014655
+>>>>>>>.------------- 86 91014656 0 601
+****** 86
+[255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 128]
+------------->>>>>>>>>>>>> 2000000 91014656 93014655
+checking movies>>>>>>>>>>>
+checking movies>>>>>>>>>>>
+start 93014656 bytes=93014656-
+end 95014655
+>>>>>>>.------------- 88 93014656 0 601
+****** 88
+[255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 128]
+------------->>>>>>>>>>>>> 2000000 93014656 95014655
+checking movies>>>>>>>>>>>
+checking movies>>>>>>>>>>>
+start 95014656 bytes=95014656-
+end 97014655
+>>>>>>>.------------- 90 95014656 0 601
+****** 90
+[255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 128]
+------------->>>>>>>>>>>>> 2000000 95014656 97014655
+checking movies>>>>>>>>>>>
+checking movies>>>>>>>>>>>
+start 97014656 bytes=97014656-
+end 99014655
+>>>>>>>.------------- 92 97014656 0 601
+****** 92
+[255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 128]
+------------->>>>>>>>>>>>> 2000000 97014656 99014655
+checking movies>>>>>>>>>>>
+checking movies>>>>>>>>>>>
+checking movies>>>>>>>>>>>
+start 99014656 bytes=99014656-
+end 101014655
+>>>>>>>.------------- 94 99014656 0 601
+****** 94
+[255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 128]
+------------->>>>>>>>>>>>> 2000000 99014656 101014655
+checking movies>>>>>>>>>>>
+start 101014656 bytes=101014656-
+end 103014655
+>>>>>>>.------------- 96 101014656 0 601
+****** 96
+[255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 128]
+------------->>>>>>>>>>>>> 2000000 101014656 103014655
+checking movies>>>>>>>>>>>
+checking movies>>>>>>>>>>>
+start 103014656 bytes=103014656-
+end 105014655
+>>>>>>>.------------- 98 103014656 0 601
+****** 98
+[255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 128]
+------------->>>>>>>>>>>>> 2000000 103014656 105014655
+checking movies>>>>>>>>>>>
+start 105014656 bytes=105014656-
+end 107014655
+>>>>>>>.------------- 100 105014656 0 601
+****** 100
+[255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 128]
+------------->>>>>>>>>>>>> 2000000 105014656 107014655
+checking movies>>>>>>>>>>>
+checking movies>>>>>>>>>>>
+checking movies>>>>>>>>>>>
+start 107014656 bytes=107014656-
+end 109014655
+>>>>>>>.------------- 102 107014656 0 601
+****** 102
+[255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 128]
+------------->>>>>>>>>>>>> 2000000 107014656 109014655
+checking movies>>>>>>>>>>>
+start 109014656 bytes=109014656-
+end 111014655
+>>>>>>>.------------- 103 109014656 0 601
+****** 103
+[255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 128]
+------------->>>>>>>>>>>>> 2000000 109014656 111014655
+checking movies>>>>>>>>>>>
+checking movies>>>>>>>>>>>
+start 111014656 bytes=111014656-
+end 113014655
+>>>>>>>.------------- 105 111014656 0 601
+****** 105
+[255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 128]
+------------->>>>>>>>>>>>> 2000000 111014656 113014655
+checking movies>>>>>>>>>>>
+start 113014656 bytes=113014656-
+end 115014655
+>>>>>>>.------------- 107 113014656 0 601
+****** 107
+[255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 128]
+------------->>>>>>>>>>>>> 2000000 113014656 115014655
+checking movies>>>>>>>>>>>
+checking movies>>>>>>>>>>>
+start 115014656 bytes=115014656-
+end 117014655
+>>>>>>>.------------- 109 115014656 0 601
+****** 109
+[255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 128]
+------------->>>>>>>>>>>>> 2000000 115014656 117014655
+checking movies>>>>>>>>>>>
+checking movies>>>>>>>>>>>
+start 117014656 bytes=117014656-
+end 119014655
+>>>>>>>.------------- 111 117014656 0 601
+****** 111
+[255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 128]
+------------->>>>>>>>>>>>> 2000000 117014656 119014655
+checking movies>>>>>>>>>>>
+checking movies>>>>>>>>>>>
+checking movies>>>>>>>>>>>
+start 119014656 bytes=119014656-
+end 121014655
+>>>>>>>.------------- 113 119014656 0 601
+****** 113
+[255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 128]
+------------->>>>>>>>>>>>> 2000000 119014656 121014655
+checking movies>>>>>>>>>>>
+checking movies>>>>>>>>>>>
+start 121014656 bytes=121014656-
+end 123014655
+>>>>>>>.------------- 115 121014656 0 601
+****** 115
+[255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 128]
+------------->>>>>>>>>>>>> 2000000 121014656 123014655
+checking movies>>>>>>>>>>>
+checking movies>>>>>>>>>>>
+start 123014656 bytes=123014656-
+end 125014655
+>>>>>>>.------------- 117 123014656 0 601
+****** 117
+[255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 128]
+------------->>>>>>>>>>>>> 2000000 123014656 125014655
+checking movies>>>>>>>>>>>
+start 125014656 bytes=125014656-
+end 127014655
+>>>>>>>.------------- 119 125014656 0 601
+****** 119
+[255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 128]
+------------->>>>>>>>>>>>> 2000000 125014656 127014655
+checking movies>>>>>>>>>>>
+checking movies>>>>>>>>>>>
+checking movies>>>>>>>>>>>
+start 127014656 bytes=127014656-
+end 129014655
+>>>>>>>.------------- 121 127014656 0 601
+****** 121
+[255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 128]
+------------->>>>>>>>>>>>> 2000000 127014656 129014655
+checking movies>>>>>>>>>>>
+checking movies>>>>>>>>>>>
+start 129014656 bytes=129014656-
+end 131014655
+>>>>>>>.------------- 123 129014656 0 601
+****** 123
+[255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 128]
+------------->>>>>>>>>>>>> 2000000 129014656 131014655
+checking movies>>>>>>>>>>>
+checking movies>>>>>>>>>>>
+start 131014656 bytes=131014656-
+end 133014655
+>>>>>>>.------------- 124 131014656 0 601
+****** 124
+[255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 128]
+------------->>>>>>>>>>>>> 2000000 131014656 133014655
+start 133014656 bytes=133014656-
+end 135014655
+>>>>>>>.------------- 126 133014656 0 601
+****** 126
+[255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 128]
+------------->>>>>>>>>>>>> 2000000 133014656 135014655
+checking movies>>>>>>>>>>>
+checking movies>>>>>>>>>>>
+checking movies>>>>>>>>>>>
+start 135014656 bytes=135014656-
+end 137014655
+>>>>>>>.------------- 128 135014656 0 601
+****** 128
+[255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 128]
+------------->>>>>>>>>>>>> 2000000 135014656 137014655
+checking movies>>>>>>>>>>>
+start 137014656 bytes=137014656-
+end 139014655
+>>>>>>>.------------- 130 137014656 0 601
+****** 130
+[255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 128]
+------------->>>>>>>>>>>>> 2000000 137014656 139014655
+checking movies>>>>>>>>>>>
+checking movies>>>>>>>>>>>
+checking movies>>>>>>>>>>>
+start 139014656 bytes=139014656-
+end 141014655
+>>>>>>>.------------- 132 139014656 0 601
+****** 132
+[255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 128]
+------------->>>>>>>>>>>>> 2000000 139014656 141014655
+checking movies>>>>>>>>>>>
+start 141014656 bytes=141014656-
+end 143014655
+>>>>>>>.------------- 134 141014656 0 601
+****** 134
+[255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 128]
+------------->>>>>>>>>>>>> 2000000 141014656 143014655
+checking movies>>>>>>>>>>>
+start 143014656 bytes=143014656-
+end 145014655
+>>>>>>>.------------- 136 143014656 0 601
+****** 136
+[255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 128]
+------------->>>>>>>>>>>>> 2000000 143014656 145014655
+checking movies>>>>>>>>>>>
+start 145014656 bytes=145014656-
+end 147014655
+>>>>>>>.------------- 138 145014656 0 601
+****** 138
+[255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 128]
+------------->>>>>>>>>>>>> 2000000 145014656 147014655
+checking movies>>>>>>>>>>>
+start 147014656 bytes=147014656-
+end 149014655
+>>>>>>>.------------- 140 147014656 0 601
+****** 140
+[255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 128]
+------------->>>>>>>>>>>>> 2000000 147014656 149014655
+checking movies>>>>>>>>>>>
+start 149014656 bytes=149014656-
+end 151014655
+>>>>>>>.------------- 142 149014656 0 601
+****** 142
+[255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 128]
+------------->>>>>>>>>>>>> 2000000 149014656 151014655
+checking movies>>>>>>>>>>>
+start 151014656 bytes=151014656-
+end 153014655
+>>>>>>>.------------- 144 151014656 0 601
+****** 144
+[255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 128]
+------------->>>>>>>>>>>>> 2000000 151014656 153014655
+checking movies>>>>>>>>>>>
+start 153014656 bytes=153014656-
+end 155014655
+>>>>>>>.------------- 145 153014656 0 601
+****** 145
+[255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 128]
+------------->>>>>>>>>>>>> 2000000 153014656 155014655
+checking movies>>>>>>>>>>>
+checking movies>>>>>>>>>>>
+start 155014656 bytes=155014656-
+end 157014655
+>>>>>>>.------------- 147 155014656 0 601
+****** 147
+[255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 128]
+------------->>>>>>>>>>>>> 2000000 155014656 157014655
+checking movies>>>>>>>>>>>
+start 157014656 bytes=157014656-
+end 159014655
+>>>>>>>.------------- 149 157014656 0 601
+****** 149
+[255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 255 128]
+------------->>>>>>>>>>>>> 2000000 157014656 159014655
+checking movies>>>>>>>>>>>
+checking movies>>>>>>>>>>>
+checking movies>>>>>>>>>>>
+checking movies>>>>>>>>>>>
+checking movies>>>>>>>>>>>
+****************** we just stopped string *************************** 
+we are done  done ! 20m17.22272206s
+checking movies>>>>>>>>>>>

@@ -1,14 +1,11 @@
 package services
 
 import (
-	"crypto/rand"
-	"encoding/hex"
-	"fmt"
-	"net/url"
-	"strings"
+	"io"
+	"log"
+	"os"
 
-	"github.com/hatim-lahwaouir/Hypertube/movie_streaming/bittorentProtocol"
-	"golang.org/x/text/unicode/rangetable"
+	"github.com/anacrolix/torrent"
 )
 
 
@@ -29,50 +26,52 @@ func NewDownloadTorrent(m string) *DownloadTorrent{
 
 
 
-func (d *DownloadTorrent) DownloadTorrent() error {
-	var( 
-		udpTrackers []*bittorentProtocol.UdpTracker 
-		peerId [20]byte
-		Peers []*bittorentProtocol.Peer
-	)
+func (d *DownloadTorrent) DownloadTorrent() (*os.File, error) {
 
-
-	if _, err := rand.Read(peerId[:]); err != nil {
-		return err
-	}
-
-	magnetLink, err := url.Parse(d.magnetLink)
+	file, err := os.CreateTemp("","file.*.torrent")
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	for _,val := range magnetLink.Query()["tr"]{
-		
-		if strings.HasPrefix(val, "udp"){
-			udpTrackers = append(udpTrackers, bittorentProtocol.NewUdpTracker(val))
-		}
-	}
-	for i := range(udpTrackers){
-		fmt.Println(udpTrackers[i])
-	}
 
-	InfoHash, err := hex.DecodeString(magnetLink.Query()["xt"][:][0][len("urn:btih:"):])
+	cfg := torrent.NewDefaultClientConfig()
+	
+	// Optional: Set a dummy data storage directory so it doesn't download actual media files
+	cfg.DataDir = os.TempDir()
+
+	// 2. Instantiate the BitTorrent client
+	client, err := torrent.NewClient(cfg)
 	if err != nil {
-		return err
+		log.Fatalf("Error creating torrent client: %s", err)
 	}
-	
-	source := bittorentProtocol.NewUdpTrackers(udpTrackers)
-	Peers = source.GetPeers(&bittorentProtocol.CurrentState{InfoHash: [20]byte(InfoHash), PeerId: peerId})
+	defer client.Close()
+
+	// 3. Add your magnet link to the client
+	 // Example hash
+	t, err := client.AddMagnet(d.magnetLink)
+	if err != nil {
+		log.Fatalf("Error adding magnet link: %s", err)
+	}
+
+	log.Println("Connecting to peers to resolve metadata...")
+
+	<-t.GotInfo()
+
+	info := t.Metainfo()
+
+	if err := info.Write(file); err != nil{
+		file.Close()
+		return nil,err
+	}
 
 
-	// we should connect to each peer
-	// send them the handshake and wait if they support the extension
+	if _, err := file.Seek(0, io.SeekStart); err != nil {
+		file.Close()
+		return nil, err
+	}
 
-	handShake := bittorentProtocol.NewHandShake(peerId, [20]byte(InfoHash))
 
+	os.Remove(file.Name())
 
-
-	
-
-	return nil
+	return file, nil
 }

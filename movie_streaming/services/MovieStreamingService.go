@@ -14,7 +14,9 @@ import (
 type MovieStreamingService struct {
 	TorrentPath string
 	Streams     map[string]*TorrentStreaming 
+	StreamLastTimeChecked     map[string]time.Time
     wg sync.WaitGroup
+	StreamsMutex sync.Mutex
 }
 
 var cacheMovieStreaming *MovieStreamingService
@@ -24,11 +26,46 @@ func NewMovieStreamingService() *MovieStreamingService {
 		cacheMovieStreaming = &MovieStreamingService{
 			TorrentPath: os.Getenv("TORRENT_PATH"),
             Streams: make(map[string]*TorrentStreaming),
+			StreamLastTimeChecked: make(map[string]time.Time),
             
 		}
 	}
+
+	go cacheMovieStreaming.MonitorStreaming()
 	return cacheMovieStreaming
 }
+
+
+
+func (ms *MovieStreamingService) MonitorStreaming() {
+	t := time.NewTicker(10 * time.Second)
+
+	for ;;{
+	select {
+	case <- t.C:	
+		ms.StreamsMutex.Lock()
+		fmt.Println("checking movies>>>>>>>>>>>")
+		for k  := range(ms.Streams){
+			if time.Since(ms.StreamLastTimeChecked[k]) > 40 * time.Second{
+				ms.Streams[k].StopStreaming()
+				delete(ms.Streams, k)
+				delete(ms.StreamLastTimeChecked, k)
+				fmt.Println("****************** we just stopped string *************************** ")
+			}
+		}
+		ms.StreamsMutex.Unlock()
+	}
+	}
+}
+
+
+func (ms *MovieStreamingService) UpdateTime(id string) {
+	ms.StreamsMutex.Lock()
+	ms.StreamLastTimeChecked[id] = time.Now()
+	ms.StreamsMutex.Unlock()
+}
+
+
 
 func (ms *MovieStreamingService) ParseTorrent(r io.Reader) (string, error) {
 	t, err := bittorent.NewTorrent(r)
@@ -47,24 +84,29 @@ func (ms *MovieStreamingService) ParseTorrent(r io.Reader) (string, error) {
 
 func (ms *MovieStreamingService) AddStream(stream *TorrentStreaming) string {
     
-	
+	ms.StreamsMutex.Lock()
+	defer ms.StreamsMutex.Unlock()
+
+
 	key := uuid.NewString()
 	_ , ok := ms.Streams[key]
 
     if !ok {
         ms.Streams[key] = stream
     }
-
+	ms.StreamLastTimeChecked[key] = time.Now()
 	return key
 }
+
 
 
 
 func (ms *MovieStreamingService) HasBitField(id string, start uint64, end uint64) ([]byte, error) {
 	// 1- check if server has the pieces requested
 	// 2- get the pieces requested and stream them to the client 
-    t , ok := ms.Streams[id]
-
+	ms.StreamsMutex.Lock()
+	t , ok := ms.Streams[id]
+	ms.StreamsMutex.Unlock()
 	if !ok{
 		return nil, nil 
 	}
