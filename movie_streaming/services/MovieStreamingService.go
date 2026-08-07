@@ -3,16 +3,16 @@ package services
 import (
 	"fmt"
 	"io"
-	"os"
+	"path/filepath"
 	"sync"
 	"time"
+
 	"github.com/google/uuid"
 
 	bittorent "github.com/hatim-lahwaouir/Hypertube/movie_streaming/bittorentProtocol"
 )
 
 type MovieStreamingService struct {
-	TorrentPath string
 	Streams     map[string]*TorrentStreaming 
 	StreamLastTimeChecked     map[string]time.Time
     wg sync.WaitGroup
@@ -24,7 +24,6 @@ var cacheMovieStreaming *MovieStreamingService
 func NewMovieStreamingService() *MovieStreamingService {
 	if cacheMovieStreaming == nil {
 		cacheMovieStreaming = &MovieStreamingService{
-			TorrentPath: os.Getenv("TORRENT_PATH"),
             Streams: make(map[string]*TorrentStreaming),
 			StreamLastTimeChecked: make(map[string]time.Time),
             
@@ -44,13 +43,11 @@ func (ms *MovieStreamingService) MonitorStreaming() {
 	select {
 	case <- t.C:	
 		ms.StreamsMutex.Lock()
-		fmt.Println("checking movies>>>>>>>>>>>")
 		for k  := range(ms.Streams){
-			if time.Since(ms.StreamLastTimeChecked[k]) > 40 * time.Second{
+			if time.Since(ms.StreamLastTimeChecked[k]) > 2 * time.Minute{
 				ms.Streams[k].StopStreaming()
 				delete(ms.Streams, k)
 				delete(ms.StreamLastTimeChecked, k)
-				fmt.Println("****************** we just stopped string *************************** ")
 			}
 		}
 		ms.StreamsMutex.Unlock()
@@ -117,9 +114,14 @@ func (ms *MovieStreamingService) HasBitField(id string, start uint64, end uint64
 
 	t.ChangePriority(int64(start))
 
-	for t.HasRange(int64(start), int64(end)) == false {
+	for t.HasRange(int64(start), int64(end)) == false && t.StreamingRunning() {
 		time.Sleep(1 * time.Second)
 		fmt.Println("------------------still not good")
+	}
+
+
+	if !t.StreamingRunning(){
+		return nil, fmt.Errorf("error coudln't found the data requested ")
 	}
 
 	data, err := t.ReadChunk(int(start), int(end - start) + 1)
@@ -142,3 +144,36 @@ func (ms *MovieStreamingService) FileSize(id string ) (int) {
 
 	return int(t.MovieFile.Size)
 }
+
+
+func (ms *MovieStreamingService) Filename(id string ) (string) {
+	// 1- check if server has the pieces requested
+	// 2- get the pieces requested and stream them to the client 
+    t , ok := ms.Streams[id]
+
+	if !ok{
+		return ""
+	}
+
+	return filepath.Base(t.MovieFile.FilePath)
+}
+
+
+
+func (ms *MovieStreamingService) StreamStatus(id string) string {
+	// 1- check if server has the pieces requested
+	// 2- get the pieces requested and stream them to the client 
+	ms.StreamsMutex.Lock()
+	t , ok := ms.Streams[id]
+	ms.StreamsMutex.Unlock()
+	if !ok{
+		return "stoped"
+	}
+
+	if t.StreamingRunning(){
+		return "running"
+	}
+
+	return "stoped"
+}
+

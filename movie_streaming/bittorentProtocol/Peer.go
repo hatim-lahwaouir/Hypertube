@@ -45,6 +45,7 @@ type Peer struct {
 	PieceDone   chan bool
 	HasBitField  bool
 	ServerBitField []byte
+	gone atomic.Bool
 
 }
 
@@ -597,6 +598,11 @@ func (p *Peer) PeerMesgs(wg *sync.WaitGroup) {
 
 // Clear function to free all resources allocated
 func (p *Peer) Clear() {
+
+	if p.gone.Load(){
+		return
+	}
+	p.gone.Store(true)
 	p.valid.Store(false)
 
 

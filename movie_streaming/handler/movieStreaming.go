@@ -1,10 +1,12 @@
 package handler
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
+	// "time"
 
 	"github.com/hatim-lahwaouir/Hypertube/movie_streaming/services"
 	"github.com/hatim-lahwaouir/Hypertube/movie_streaming/utils"
@@ -19,22 +21,26 @@ func NewMovieStreamingHandler(ms *services.MovieStreamingService) *MovieStreamin
 	return &MovieStreaming{MoviStreamingService: ms,}
 }
 
-var magnetLink string = "magnet:?xt=urn:btih:37E77490BC4F285DBFA837514715A20BD405A502&dn=Spider-Man%3A+Far+from+Home+%282019%29+%5BWEBRip%5D+%5B1080p%5D+%5BYTS%5D+%5BYIFY%5D&tr=udp%3A%2F%2Ftracker.coppersurfer.tk%3A6969%2Fannounce&tr=udp%3A%2F%2F9.rarbg.com%3A2710%2Fannounce&tr=udp%3A%2F%2Fp4p.arenabg.com%3A1337&tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&tr=udp%3A%2F%2Ftracker.opentrackr.org%3A1337%2Fannounce&tr=http%3A%2F%2Ftracker.openbittorrent.com%3A80%2Fannounce&tr=udp%3A%2F%2Fopentracker.i2p.rocks%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.internetwarriors.net%3A1337%2Fannounce&tr=udp%3A%2F%2Ftracker.leechers-paradise.org%3A6969%2Fannounce&tr=udp%3A%2F%2Fcoppersurfer.tk%3A6969%2Fannounce&tr=udp%3A%2F%2Ftracker.zer0day.to%3A1337%2Fannounce"
-
+type MagnetRequest struct {
+    MagnetLink string `json:"magnet_link"`
+}
 
 
 
 func (ms *MovieStreaming) Download(w http.ResponseWriter, r *http.Request) error {
-    // r.ParseMultipartForm(20 << 20)
 
-    // file, _, err := r.FormFile("torrent")
-    // if err != nil {
-	// 	return utils.WriteResp(w, http.StatusBadRequest, "Invalid torrent name")
-    // }	
-	// defer file.Close()
-	// install the torrent the passit to the parseTorrent
+    var req MagnetRequest
 
-	t := services.NewDownloadTorrent(magnetLink)
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+        return utils.WriteResp(w, http.StatusBadRequest, "Invalid request body")
+    }
+
+    if req.MagnetLink == "" {
+        return utils.WriteResp(w, http.StatusBadRequest, "magnet_link is required")
+    }
+
+
+    t := services.NewDownloadTorrent(req.MagnetLink)
 	
 	file, err :=  t.DownloadTorrent()
 	if err != nil  {
@@ -58,54 +64,107 @@ func (ms *MovieStreaming) Download(w http.ResponseWriter, r *http.Request) error
 
 
 func (ms *MovieStreaming) StreamVideo(w http.ResponseWriter, r *http.Request) error {
+	infoHash := r.PathValue("movie_id")
+	isDownload := r.URL.Query().Get("action") == "download"
+	totalFileSize := int64(ms.MoviStreamingService.FileSize(infoHash))
 
-	infoHash := r.PathValue("infohash")
 	rangeHeader := r.Header.Get("Range")
-    var start, end int64
-    start = 0
-    end = 0
+	var start, end int64 = 0, totalFileSize - 1
 
-    if rangeHeader != "" {
-        rangeStr := strings.TrimPrefix(rangeHeader, "bytes=")
-        parts := strings.Split(rangeStr, "-")
-        if len(parts) > 0 && parts[0] != "" {
-            start, _ = strconv.ParseInt(parts[0], 10, 64)
-        }
-        if len(parts) > 1 && parts[1] != "" {
-            end, _ = strconv.ParseInt(parts[1], 10, 64)
-        }
-    }
-	if end == 0 {
-		end = start + 2000000 - 1
+	// Parse the requested start byte if provided
+	if rangeHeader != "" {
+		rangeStr := strings.TrimPrefix(rangeHeader, "bytes=")
+		parts := strings.Split(rangeStr, "-")
+		if len(parts) > 0 && parts[0] != "" {
+			start, _ = strconv.ParseInt(parts[0], 10, 64)
+		}
+		// We ignore the requested 'end' for downloads to force the whole file,
+		// but respect it for video players if they specifically ask for a small chunk.
+		if len(parts) > 1 && parts[1] != "" && !isDownload {
+			end, _ = strconv.ParseInt(parts[1], 10, 64)
+		}
 	}
 
+	// 1. FOR VIDEO PLAYERS: Cap the chunk size to save memory (e.g., 2MB chunks)
+	if !isDownload {
+		if end-start > 2000000 {
+			end = start + 2000000 - 1
+		}
+		
+		data, err := ms.MoviStreamingService.HasBitField(infoHash, uint64(start), uint64(end))
+		ms.MoviStreamingService.UpdateTime(infoHash)
+		if err != nil {
+			return utils.WriteResp(w, http.StatusBadRequest, err.Error())
+		}
 
+		w.Header().Set("Content-Type", "video/mp4")
+		w.Header().Set("Accept-Ranges", "bytes")
+		w.Header().Set("Content-Length", strconv.FormatInt(int64(len(data)), 10))
+		w.Header().Set("Content-Range", fmt.Sprintf("bytes %d-%d/%d", start, start+int64(len(data))-1, totalFileSize))
+		w.Header().Set("Content-Disposition", fmt.Sprintf("inline; filename=\"%s\"",ms.MoviStreamingService.Filename(infoHash)))
+		
+		w.WriteHeader(http.StatusPartialContent)
+		w.Write(data)
+		return nil
+	}
+
+	// 2. FOR DIRECT DOWNLOADS: Stream the entire file continuously
+	// We use a loop to fetch chunks from your torrent engine so we don't load a 2GB movie into RAM all at once.
+	w.Header().Set("Content-Type", "video/mp4")
+	w.Header().Set("Accept-Ranges", "bytes")
+	w.Header().Set("Content-Length", strconv.FormatInt(totalFileSize-start, 10))
+	w.Header().Set("Content-Disposition",fmt.Sprintf("attachment; filename=\"%s\"",ms.MoviStreamingService.Filename(infoHash)))
+
+	if start > 0 {
+		w.Header().Set("Content-Range", fmt.Sprintf("bytes %d-%d/%d", start, totalFileSize-1, totalFileSize))
+		w.WriteHeader(http.StatusPartialContent)
+	} else {
+		w.WriteHeader(http.StatusOK)
+	}
+
+	currentOffset := start
+	chunkSize := int64(2000000) // 2MB internal chunks
+
+	for currentOffset < totalFileSize {
+		chunkEnd := currentOffset + chunkSize - 1
+		if chunkEnd >= totalFileSize {
+			chunkEnd = totalFileSize - 1
+		}
+
+		// This will block until the torrent engine has this specific 2MB piece
+		data, err := ms.MoviStreamingService.HasBitField(infoHash, uint64(currentOffset), uint64(chunkEnd))
+		ms.MoviStreamingService.UpdateTime(infoHash)
+		if err != nil {
+			fmt.Println("Error fetching piece during download:", err)
+			return err
+		}
+
+		// Write the chunk to the HTTP response
+		_, err = w.Write(data)
+		if err != nil {
+			fmt.Println("Client disconnected or download cancelled:", err)
+			return nil // Client closed the connection, just exit cleanly
+		}
+
+		// Flush the HTTP writer to ensure data goes to the browser immediately
+		if flusher, ok := w.(http.Flusher); ok {
+			flusher.Flush()
+		}
+
+		currentOffset = chunkEnd + 1
+	}
+
+	return nil
+}
+
+
+
+func (ms *MovieStreaming) StreamStatus(w http.ResponseWriter, r *http.Request) error {
+
+	id := r.PathValue("movie_id")
+
+	status := ms.MoviStreamingService.StreamStatus(id)
 	
-	fmt.Println("start", start, rangeHeader)
-	fmt.Println("end", end)
-	data, err := ms.MoviStreamingService.HasBitField(infoHash, uint64(start), uint64(end))
-	ms.MoviStreamingService.UpdateTime(infoHash)
-	if err != nil {
-		return utils.WriteResp(w, http.StatusBadRequest, err.Error())
-	}
-	w.Header().Set("Content-Type", "video/mp4") // Consider mapping this dynamically based on file extension
-    w.Header().Set("Accept-Ranges", "bytes")
-    w.Header().Set("Content-Length", strconv.FormatInt(int64(len(data)), 10))
-    w.Header().Set("Content-Range", fmt.Sprintf("bytes %d-%d/%d", start, start + int64(len(data)) - 1, ms.MoviStreamingService.FileSize(infoHash)))
-
-	fmt.Println("------------->>>>>>>>>>>>>", len(data), start, end)
-	w.WriteHeader(http.StatusPartialContent)
-	_, err = w.Write(data)
-    if err != nil {
-        // If w.Write fails (e.g., client closed the browser), do NOT return the error 
-        // back to MakeHandler. If you do, MakeHandler will try to write a 500 JSON error 
-        // over the video stream, causing the "superfluous WriteHeader" panic.
-        fmt.Println("Client disconnected or stream interrupted:", err)
-        return nil 
-    }
-
-    // 3. Return nil so MakeHandler knows the request succeeded
-    return nil
-	// return utils.WriteResp(w, http.StatusPartialContent, data)
+	return utils.WriteResp(w, http.StatusOK, status)
 }
 

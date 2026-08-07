@@ -1,9 +1,11 @@
 package services
 
 import (
+	"fmt"
 	"io"
 	"log"
 	"os"
+	"time"
 
 	"github.com/anacrolix/torrent"
 )
@@ -14,12 +16,13 @@ import (
 
 type  DownloadTorrent struct {
 	magnetLink string
+	maxConn chan bool
 }
 
 
 
 func NewDownloadTorrent(m string) *DownloadTorrent{
-	return &DownloadTorrent{magnetLink:  m}
+	return &DownloadTorrent{magnetLink:  m, maxConn: make(chan bool, 5)}
 }
 
 
@@ -28,21 +31,24 @@ func NewDownloadTorrent(m string) *DownloadTorrent{
 
 func (d *DownloadTorrent) DownloadTorrent() (*os.File, error) {
 
+	d.maxConn <- true
 	file, err := os.CreateTemp("","file.*.torrent")
 	if err != nil {
 		return nil, err
 	}
 
+	
 
 	cfg := torrent.NewDefaultClientConfig()
-	
-	// Optional: Set a dummy data storage directory so it doesn't download actual media files
+	cfg.ListenPort = 0 
 	cfg.DataDir = os.TempDir()
+
 
 	// 2. Instantiate the BitTorrent client
 	client, err := torrent.NewClient(cfg)
 	if err != nil {
-		log.Fatalf("Error creating torrent client: %s", err)
+		<-d.maxConn
+		return nil, fmt.Errorf("Error creating torrent client: %s", err)
 	}
 	defer client.Close()
 
@@ -50,13 +56,22 @@ func (d *DownloadTorrent) DownloadTorrent() (*os.File, error) {
 	 // Example hash
 	t, err := client.AddMagnet(d.magnetLink)
 	if err != nil {
-		log.Fatalf("Error adding magnet link: %s", err)
+		<-d.maxConn
+		return nil, err
 	}
 
 	log.Println("Connecting to peers to resolve metadata...")
 
-	<-t.GotInfo()
-
+	select {
+		case <-t.GotInfo():
+			<-d.maxConn
+		case <-time.After(60 * time.Second):
+			<-d.maxConn
+			file.Close()
+			os.Remove(file.Name())
+			return nil, fmt.Errorf("timeout: could not resolve magnet link metadata within 20 seconds")
+	}
+	
 	info := t.Metainfo()
 
 	if err := info.Write(file); err != nil{

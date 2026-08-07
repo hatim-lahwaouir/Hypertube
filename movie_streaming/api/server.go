@@ -55,8 +55,9 @@ func StartServer(server http.Server) error {
 
 	router := http.NewServeMux()
 
-	router.HandleFunc("POST /movie/", utils.MakeHandler(movieStreamHandler.Download))
-	router.HandleFunc("GET /movie/{infohash}", utils.MakeHandler(movieStreamHandler.StreamVideo))
+	router.HandleFunc("POST /api/movie/", utils.MakeHandler(movieStreamHandler.Download))
+	router.HandleFunc("GET /api/movie/{movie_id}", utils.MakeHandler(movieStreamHandler.StreamVideo))
+	router.HandleFunc("GET /api/movie/status/{movie_id}", utils.MakeHandler(movieStreamHandler.StreamVideo))
 
 	server.Handler = corsMiddleware(router)
 	fmt.Println("here")

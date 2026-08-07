@@ -543,6 +543,15 @@ func (t *TorrentStreaming) StopStreaming(){
 }
 
 
+
+func (t *TorrentStreaming) StreamingRunning() bool {
+
+	return !t.Stop.Load()
+}
+
+
+
+
 func (t *TorrentStreaming) MonitorPeers(wg *sync.WaitGroup){
 
     var (
